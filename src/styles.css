@@ -131,7 +131,7 @@ body{
 }
 
 .table-elegant th,
-.table-elegant td {
+.table-elegant td { 
   padding: 15px 20px; /* Espaciado interno de las celdas */
   text-align: left; /* Alinea el texto a la izquierda en celdas */
   max-width: 150px; /* Ancho máximo para evitar que el texto sobresalga */
@@ -179,58 +179,57 @@ body{
   padding: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-
+  
 /* Estilos para el paginador dentro del contenedor */
 .paginador-container .mat-paginator {
   background-color: transparent;
   color: white;
 }
-
+  
 /* Estilo para los botones del paginador */
 .paginador-container .mat-paginator .mat-icon-button {
   color: white;
 }
-
+  
 /* Estilo para el texto del paginador */
 .paginador-container .mat-paginator-range-label,
 .paginador-container .mat-paginator-page-size-label {
   color: white;
 }
-
+  
 /* Estilo para el selector de tamaño de página */
 .paginador-container .mat-paginator-page-size-select {
   background-color: white;
   border-radius: 20px;
   margin-left: 10px;
 }
-
+  
 .paginador-container .mat-paginator-page-size-select .mat-select-value {
   color: #333;
 }
-
+  
 /* Estilo para los botones de navegación cuando están deshabilitados */
 .paginador-container .mat-paginator-navigation-disabled .mat-icon-button {
   color: rgba(255, 255, 255, 0.5);
 }
-
+  
 /* Estilo para el hover de los botones */
 .paginador-container .mat-paginator .mat-icon-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
-
+  
 /* Ajuste del espaciado interno del paginador */
 .paginador-container .mat-paginator-container {
   justify-content: center;
   padding: 0 16px;
 }
-
+  
 /* Estilo para el desplegable de selección de tamaño de página */
 .paginador-container .mat-paginator-page-size-select.mat-select {
   width: 56px;
 }
 
-/*----- Estilos para modales -----*/
-
+/* ----- Estilos para modales ----- */
 .modal {
   position: fixed;
   top: 0;
@@ -274,37 +273,6 @@ body{
 .button-group-left {
   display: flex;
   gap: 10px;
-}
-
-/*----- Estilos para campos y toogle slide -----*/
-
-.form-container {
-  width: 100%;
-}
-
-.form-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: -20px;
-}
-
-.mat-form-field {
-  flex-grow: 1;
-  margin-right: 20px;
-}
-
-.toggle-wrapper {
-  display: flex;
-  align-items: center;
-  width: 120px; /* Ancho fijo para el contenedor del toggle */
-  justify-content: flex-end; /* Alinea el toggle a la derecha */
-}
-
-.toggle-label {
-  min-width: 50px; /* Ancho mínimo para el texto del toggle */
-  display: inline-block;
-  text-align: right;
 }
 
 /*----- Estilos para modal de ALERTAS -----*/
