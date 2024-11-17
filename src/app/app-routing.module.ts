@@ -8,14 +8,14 @@ import { ActasComponent } from './actas/actas.component';
 import { PaginaDePruebaELIMINARComponent } from './pagina-de-prueba-eliminar/pagina-de-prueba-eliminar.component';
 
 const routes: Routes = [
-    { path: 'pagina-de-prueba-eliminar', component: PaginaDePruebaELIMINARComponent, canActivate: [AuthGuard]},
+    // Actas
+    { path: 'actas', component: ActasComponent, canActivate: [AuthGuard] },
+    { path: 'pagina-de-prueba-eliminar', component: PaginaDePruebaELIMINARComponent, canActivate: [AuthGuard] },
 
     //LogIn ahora es la pagina que primero se ejecuta
     { path: '', redirectTo: '/login', pathMatch: 'full' }, // Redirige a la ruta de login por defecto
     { path: 'login', component: LogInComponent }, // Ruta para el componente de inicio de sesión
     { path: '**', redirectTo: '/login' }, // Redirige rutas no encontradas a login
-    // Actas
-    {path: 'actas', component: ActasComponent, canActivate: [AuthGuard]},
   ];
 
 @NgModule({
