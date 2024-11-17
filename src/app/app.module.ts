@@ -9,7 +9,6 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 // Componentes
 import { BodyComponent } from './body/body.component';
 import { SidenavComponent } from './sidenav/sidenav.component';
-import { PaginaDePruebaELIMINARComponent } from './pagina-de-prueba-eliminar/pagina-de-prueba-eliminar.component';
 import { LogInComponent } from './login/login.component';
 import { ActasComponent } from './actas/actas.component';
 
@@ -33,7 +32,6 @@ import { HttpClientModule } from '@angular/common/http';
   declarations: [
     AppComponent,
     BodyComponent,
-    PaginaDePruebaELIMINARComponent,
     LogInComponent,
     SidenavComponent,
     ActasComponent

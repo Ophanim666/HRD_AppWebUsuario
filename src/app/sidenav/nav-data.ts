@@ -8,12 +8,6 @@ export const navbarData = [
   },
 
   {
-    RouterLink: 'pagina-de-prueba-eliminar',
-    icon: 'fa-solid fa-trash',
-    label: 'Prueba',
-  },
-
-  {
     RouterLink: 'logout',
     icon: 'fa-solid fa-sign-out-alt',
     label: 'Cerrar sesión',

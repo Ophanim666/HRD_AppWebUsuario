@@ -5,12 +5,10 @@ import { AuthGuard } from './guards/auth.guard';
 //Login
 import { LogInComponent } from './login/login.component';
 import { ActasComponent } from './actas/actas.component';
-import { PaginaDePruebaELIMINARComponent } from './pagina-de-prueba-eliminar/pagina-de-prueba-eliminar.component';
 
 const routes: Routes = [
     // Actas
     { path: 'actas', component: ActasComponent, canActivate: [AuthGuard] },
-    { path: 'pagina-de-prueba-eliminar', component: PaginaDePruebaELIMINARComponent, canActivate: [AuthGuard] },
 
     //LogIn ahora es la pagina que primero se ejecuta
     { path: '', redirectTo: '/login', pathMatch: 'full' }, // Redirige a la ruta de login por defecto
