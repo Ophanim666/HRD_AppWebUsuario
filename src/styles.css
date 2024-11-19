@@ -28,7 +28,7 @@ body{
   background-color: #fff; /* Color de fondo de la tarjeta */
   padding: 20px; /* Espaciado interno de la tarjeta */
 
-.card-head{
+  .card-head{
     padding: 1rem 1.5rem;
     border-bottom: 1px solid #edf1f7;
     font-size: 1rem;
