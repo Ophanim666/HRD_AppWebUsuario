@@ -13,7 +13,7 @@ export class LogInComponent {
   errorMessage: string = ''; // Mensaje de error si ocurre uno
   showPassword: boolean = false;
 
-  private apiUrl = 'https://localhost:7125/api/LogIn/login';
+  private apiUrl = 'https://localhost:7125/api/LogIn/loginUsuario';
 
   constructor(private http: HttpClient, private router: Router) { }
 

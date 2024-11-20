@@ -1,10 +1,117 @@
-<h1>Actas</h1>
-<div class="card">
-  <div class="card-head">Actas</div>
-  <div class="card-body">
-    <!-- aqui va el contenido -->
+<!-- Barra de búsqueda -->
+<div class="buscador-container">
+  <input
+    type="text"
+    placeholder="Buscar por nombre..."
+    [(ngModel)]="searchText"
+    (ngModelChange)="onSearchChange()"
+    class="buscador"
+  />
+</div>
 
-    Lorem ipsum dolor sit amet consectetur adipisicing elit. Quia, labore non? Nisi atque qui similique eaque minus est quibusdam dicta! Eaque aspernatur sapiente suscipit vitae sunt deserunt ullam possimus blanditiis!
+<!-- Tabla -->
+<table class="table-elegant">
+  <thead>
+    <tr>
+      <th>N° Acta</th>
+      <th>Obra</th>
+      <th>Proveedor</th>
+      <th>Especialidad</th>
+      <th>Administrador de Obra</th>
+      <th>Fecha de Aprobación</th>
+      <!-- <th>Observaciones</th> -->
+      <th>Estado de Obra</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let acta of pagedActas">
+      <td>{{acta.id}}</td>
+      <td>{{getObraNombre(acta.obrA_ID)}}</td>
+      <td>{{getProveedorNombre(acta.proveedoR_ID)}}</td>
+      <td>{{getEspecialidadNombre(acta.especialidaD_ID)}}</td>
+      <td>{{getUsuarioNombre(acta.revisoR_ID)}}</td>
+      <td>{{acta.fechA_APROBACION | date:'dd/MM/yyyy'}}</td>
+      <!-- <td>{{acta.observacion}}</td> -->
+      <td>{{getEstadoNombre(acta.estadO_ID)}}</td>
+      <td class="actions-column">
+        <div class="button-container">
+          <button mat-flat-button color="primary" class="mat-flat-button editar" (click)="openModalActa(acta)">
+            <mat-icon>edit</mat-icon>
+          </button>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
+<!-- Paginación -->
+<div class="paginador-container">
+  <mat-paginator
+    [length]="filteredActas().length"
+    [pageSize]="5"
+    [pageSizeOptions]="[5, 10, 20]"
+    (page)="onPageChange($event)">
+  </mat-paginator>
+</div>
+
+<!-- Modal para ver tareas -->
+<div *ngIf="showModalActa" class="modal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Tareas del acta</h3>
+      </div>
+
+      <div class="modal-body">
+        <!-- Tabla de tareas -->
+        <div class="tareas-container">
+          <table class="table-elegant">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tarea</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let tarea of tareasDelGrupo">
+                <td>{{tarea.id}}</td>
+                <td>{{tarea.nombre}}</td>
+                <td></td>
+                <!-- <td>{{getEstadoTarea(tarea.estado)}}</td> -->
+                <!-- <td>{{tarea.fechaCreacion | date:'dd/MM/yyyy'}}</td> -->
+              </tr>
+              <tr *ngIf="tareasDelGrupo.length === 0">
+                <td colspan="4" class="text-center">No hay tareas asignadas a esta acta</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button mat-flat-button class="mat-flat-button cancelar" (click)="closeModalActa()">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para mostrar errores  -->
+<div *ngIf="showErrorModal" class="modal error-modal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header error">
+        <h6>{{ errorMessage.isError ? '¡Error!' : '¡Éxito!' }}</h6>
+      </div>
+      <div class="modal-body">
+        <p>{{ errorMessage.message }}</p>
+      </div>
+      <div class="modal-footer">
+        <button mat-flat-button class="mat-flat-button cerrar" (click)="closeErrorModal()">Cerrar</button>
+      </div>
+    </div>
   </div>
 </div>
