@@ -72,6 +72,14 @@ interface EstadoTarea {
   nombre: string;
 }
 
+interface UserActa {
+  grupo: number;
+  acta: number;
+  rol: number;
+  encargado: number;
+  tarea: number;
+}
+
 @Component({
   selector: 'app-actas',
   templateUrl: './actas.component.html',
@@ -81,27 +89,26 @@ interface EstadoTarea {
 export class ActasComponent implements OnInit {
 
   // Variables de clase
-  parametros: Parametro[] = [];
   actas: Acta[] = [];
+  parametros: Parametro[] = [];
   currentActa: Acta = this.getEmptyActa();
   tipoParametros: TipoParametro[] = [];
   proveedor: Proveedor[] = [];
   especialidad: Especialidad[] = [];
   usuario: Usuario[] = [];
   obra: Obra[] = [];
-
-  showModalActa = false;
-  searchText: string = '';
-  pagedActas: any[] = [];
-  
-  // Nuevas variables para manejar tareas
   gruposTareas: GrupoTarea[] = [];
   tareas: Tarea[] = [];
   tareasDelGrupo: Tarea[] = [];
   estadosTarea: EstadoTarea[] = [];
+  userActas: UserActa[] = [];
+  showModalActa = false;
+  searchText: string = '';
+  pagedActas: any[] = [];
 
-  private apiUrlGrupoTarea = 'https://localhost:7125/api/GrupoTarea';
-  private apiUrlTarea = 'https://localhost:7125/api/Tarea';
+  // Variables para manejo de errores
+  showErrorModal = false;
+  errorMessage: { message: string, isError: boolean } = { message: '', isError: true };
 
   // URLs de la API
   private apiUrl = 'https://localhost:7125/api/Parametro';
@@ -111,18 +118,15 @@ export class ActasComponent implements OnInit {
   private apiUrlUsuarios = 'https://localhost:7125/api/Usuarios';
   private apiUrlActas = 'https://localhost:7125/api/Acta';
   private apiUrlObras = 'https://localhost:7125/api/Obra';
-
-  // Variables para manejo de errores
-  showErrorModal = false;
-  errorMessage: { message: string, isError: boolean } = { message: '', isError: true };
+  private apiUrlGrupoTarea = 'https://localhost:7125/api/GrupoTarea';
+  private apiUrlTarea = 'https://localhost:7125/api/Tarea';
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
-    // Carga inicial de parámetros y tipos de parámetros
-    this.loadActas()
+    this.loadUserActas();
     this.loadTipoParametros();
     //this.loadParametros();
     this.loadProveedores();
@@ -144,6 +148,82 @@ export class ActasComponent implements OnInit {
       observacion: '',
       revisoR_ID: 0
     };
+  }
+
+  // Nueva función para cargar las actas del usuario
+  loadUserActas(): void {
+    this.http.get<any>('https://localhost:7125/api/Acta/user-actas').subscribe({
+      next: response => {
+        if (response.body?.response) {
+          this.userActas = response.body.response;
+          // Cargar solo las actas que corresponden al usuario
+          this.loadActasFiltered();
+        } else {
+          this.showError('Error al cargar las actas del usuario', true);
+        }
+      },
+      error: error => {
+        console.error('Error al cargar las actas del usuario:', error);
+        this.showError('Error en la solicitud al cargar las actas del usuario.', true);
+      }
+    });
+  }
+
+  // Nueva función para cargar las actas filtradas
+  loadActasFiltered(): void {
+    // Obtener los IDs únicos de las actas del usuario
+    const actaIds = [...new Set(this.userActas.map(ua => ua.acta))];
+    
+    this.http.get<any>(`${this.apiUrlActas}/Listar`).subscribe({
+      next: response => {
+        if (response.estado.ack) {
+          // Filtrar solo las actas que están en userActas
+          this.actas = response.body.response.filter((acta: Acta) => 
+            actaIds.includes(acta.id!)
+          );
+          this.updatePageActa();
+        } else {
+          this.showError(`Error al cargar las actas: ${response.estado.errDes}`, true);
+        }
+      },
+      error: error => {
+        console.error('Error al cargar las actas:', error);
+        this.showError('Error en la solicitud al cargar las actas.', true);
+      }
+    });
+  }
+
+  filtrarTareasPorActa(actaId: number): void {
+    // Obtener las tareas correspondientes a esta acta desde userActas
+    const tareasIds = this.userActas
+      .filter(ua => ua.acta === actaId)
+      .map(ua => ua.tarea);
+
+    // Limpiar el array de tareas del grupo actual
+    this.tareasDelGrupo = [];
+
+    // Añadir solo las tareas que corresponden al usuario
+    tareasIds.forEach(tareaId => {
+      const tarea = this.tareas.find(t => t.id === tareaId);
+      if (tarea) {
+        this.tareasDelGrupo.push(tarea);
+      }
+    });
+
+    console.log('Tareas procesadas para el acta:', this.tareasDelGrupo);
+  }
+
+  // Procesar y obtener las tareas específicas de los grupos
+  procesarTareasDelGrupo(): void {
+    this.tareasDelGrupo = [];
+    this.gruposTareas.forEach(grupo => {
+      grupo.idTarea.forEach(tareaId => {
+        const tarea = this.tareas.find(t => t.id === tareaId);
+        if (tarea) {
+          this.tareasDelGrupo.push(tarea);
+        }
+      });
+    });
   }
 
   // Cargar todas las tareas disponibles
@@ -179,44 +259,6 @@ export class ActasComponent implements OnInit {
         console.error('Error al cargar los grupos de tareas:', error);
         this.showError('Error en la solicitud al cargar los grupos de tareas.', true);
       }
-    });
-  }
-
-  // Filtrar y procesar las tareas para un acta específica
-  filtrarTareasPorActa(actaId: number): void {
-    // Filtrar los grupos de tareas que corresponden al acta seleccionada
-    const gruposFiltrados = this.gruposTareas.filter(grupo => grupo.idActa === actaId);
-    console.log('Grupos filtrados para acta:', actaId, gruposFiltrados);
-
-    // Limpiar el array de tareas del grupo actual
-    this.tareasDelGrupo = [];
-
-    // Procesar cada grupo filtrado
-    gruposFiltrados.forEach(grupo => {
-      // Asumiendo que idTarea es un array en la respuesta de la API
-      if (Array.isArray(grupo.idTarea)) {
-        grupo.idTarea.forEach(tareaId => {
-          const tarea = this.tareas.find(t => t.id === tareaId);
-          if (tarea) {
-            this.tareasDelGrupo.push(tarea);
-          }
-        });
-      }
-    });
-
-    console.log('Tareas procesadas para el acta:', this.tareasDelGrupo);
-  }
-
-  // Procesar y obtener las tareas específicas de los grupos
-  procesarTareasDelGrupo(): void {
-    this.tareasDelGrupo = [];
-    this.gruposTareas.forEach(grupo => {
-      grupo.idTarea.forEach(tareaId => {
-        const tarea = this.tareas.find(t => t.id === tareaId);
-        if (tarea) {
-          this.tareasDelGrupo.push(tarea);
-        }
-      });
     });
   }
 
@@ -256,6 +298,7 @@ export class ActasComponent implements OnInit {
       }
     });
   }
+
   loadObras(): void {
     this.http.get<any>(`${this.apiUrlObras}/ObtenerObras`).subscribe({
       next: response => {
@@ -357,26 +400,26 @@ export class ActasComponent implements OnInit {
     });
   }
 
-  // Función para filtrar parámetros según el texto de búsqueda
+    // Función que se llama cuando cambia el texto de búsqueda
+  onSearchChange(): void {
+    this.paginator.firstPage();
+    this.updatePageActa();
+  }
+
+  // Función para filtrar actas según el texto de búsqueda
   filteredActas() {
     return this.actas.filter(parametro =>
       parametro.observacion.toLowerCase().includes(this.searchText.toLowerCase())
     );
   }
 
-  // Función para actualizar la página de parámetros según la paginación
+  // Función para actualizar la página según la paginación
   updatePageActa(): void {
     const filtered = this.filteredActas();
     const startIndex = this.paginator.pageIndex * this.paginator.pageSize;
     const endIndex = startIndex + this.paginator.pageSize;
     this.pagedActas = filtered.slice(startIndex, endIndex);
     this.paginator.length = filtered.length;
-  }
-
-  // Función que se llama cuando cambia el texto de búsqueda
-  onSearchChange(): void {
-    this.paginator.firstPage();
-    this.updatePageActa();
   }
 
   // Modificar el método openModalActa para usar el nuevo filtrado
@@ -391,26 +434,12 @@ export class ActasComponent implements OnInit {
     document.body.classList.add('modal-open');
   }
 
-  // // Función para manejar el cambio del estado del parámetro
-  // onToggleChange(event: MatSlideToggleChange): void {
-  //   this.currentParametro.estado = event.checked ? 1 : 0;
-  // }
-
   // Función para cerrar el modal
   closeModalActa(): void {
     this.showModalActa = false;
     document.body.classList.remove('modal-open');
   }
 
-  // Función para guardar el parámetro (crear o actualizar)
-  // saveActa(): void {
-  //   if (this.isEditMode) {
-  //     this.updateActa();
-  //   } else {
-  //     this.createActa();
-  //   }
-  // }
-  
   // Función para mostrar mensajes de error
   showError(message: string, isError: boolean): void {
     this.errorMessage = { message, isError };
@@ -428,9 +457,10 @@ export class ActasComponent implements OnInit {
     this.updatePageActa();
   }
 
-  // Funciones para obtener datos en base a su ID
+  // Obtención de datos a través de su ID
+
   getProveedorNombre(id: number): string {
-    console.log('ID recibido proveed:', id); // Ver qué ID llega
+    // console.log('ID recibido proveedor:', id); // Ver qué ID llega
     //console.log('Lista de tipos:', this.tipoParametros); // Ver qué tipos tenemos disponibles
     
     const proveedor = this.proveedor.find(elemento => {
@@ -447,7 +477,7 @@ export class ActasComponent implements OnInit {
   }
 
   getObraNombre(id: number): string {
-    console.log('ID recibido obra:', id); // Ver qué ID llega
+    // console.log('ID recibido obra:', id); // Ver qué ID llega
     //console.log('Lista de tipos:', this.tipoParametros); // Ver qué tipos tenemos disponibles
     
     const obra = this.obra.find(elemento => {
@@ -464,7 +494,7 @@ export class ActasComponent implements OnInit {
   }
 
   getEspecialidadNombre(id: number): string {
-    console.log('ID recibido:', id); // Ver qué ID llega
+    // console.log('ID recibido:', id); // Ver qué ID llega
     //console.log('Lista de tipos:', this.tipoParametros); // Ver qué tipos tenemos disponibles
     
     const especialidad = this.especialidad.find(elemento => {
@@ -481,7 +511,7 @@ export class ActasComponent implements OnInit {
   }
 
   getUsuarioNombre(id: number): string {
-    //console.log('ID recibido:', id); // Ver qué ID llega
+    // console.log('ID recibido:', id); // Ver qué ID llega
     //console.log('Lista de tipos:', this.tipoParametros); // Ver qué tipos tenemos disponibles
     
     const usuario = this.usuario.find(elemento => {
@@ -498,7 +528,7 @@ export class ActasComponent implements OnInit {
   }
 
   getEstadoNombre(id: number): string {
-    //console.log('ID recibido:', id); // Ver qué ID llega
+    // console.log('ID recibido:', id); // Ver qué ID llega
     //console.log('Lista de tipos:', this.tipoParametros); // Ver qué tipos tenemos disponibles
 
     const estado = this.parametros.find(elemento => {

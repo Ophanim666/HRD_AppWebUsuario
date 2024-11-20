@@ -17,10 +17,10 @@
       <th>Obra</th>
       <th>Proveedor</th>
       <th>Especialidad</th>
-      <!-- <th>Administrador Obra</th> -->
-      <th>Fecha de Creación</th>
-      <th>Observaciones</th>
-      <th>Estado obra</th>
+      <th>Administrador de Obra</th>
+      <th>Fecha de Aprobación</th>
+      <!-- <th>Observaciones</th> -->
+      <th>Estado de Obra</th>
       <th></th>
     </tr>
   </thead>
@@ -30,9 +30,9 @@
       <td>{{getObraNombre(acta.obrA_ID)}}</td>
       <td>{{getProveedorNombre(acta.proveedoR_ID)}}</td>
       <td>{{getEspecialidadNombre(acta.especialidaD_ID)}}</td>
-      <!-- <td>{{getUsuarioNombre(acta.revisoR_ID)}}</td> -->
-      <td>{{acta.fechA_CREACION | date:'dd/MM/yyyy'}}</td>
-      <td>{{acta.observacion}}</td>
+      <td>{{getUsuarioNombre(acta.revisoR_ID)}}</td>
+      <td>{{acta.fechA_APROBACION | date:'dd/MM/yyyy'}}</td>
+      <!-- <td>{{acta.observacion}}</td> -->
       <td>{{getEstadoNombre(acta.estadO_ID)}}</td>
       <td class="actions-column">
         <div class="button-container">
