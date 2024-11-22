@@ -106,9 +106,12 @@ export class ActasComponent implements OnInit {
   searchText: string = '';
   pagedActas: any[] = [];
 
+
+
   // Variables para manejo de errores
   showErrorModal = false;
   errorMessage: { message: string, isError: boolean } = { message: '', isError: true };
+  
 
   // URLs de la API
   private apiUrl = 'https://localhost:7125/api/Parametro';
@@ -136,6 +139,21 @@ export class ActasComponent implements OnInit {
     this.loadTareas();
     this.loadGruposTareas();
   }
+
+// ................................................................................................
+
+
+
+
+
+
+
+
+
+
+
+
+// .....................................................................................................
 
   // Función para obtener un objeto Parametro vacío
   getEmptyActa(): Acta {
