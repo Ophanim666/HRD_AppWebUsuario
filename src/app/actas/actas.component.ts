@@ -584,8 +584,6 @@ actualizarEstado(tarea: any): void {
   });
 }
 
-
-
 firmarTareas(): void {
   this.tareasDelGrupo.forEach(tarea => {
     tarea.estado = 1; // Cambiar a "SI"
@@ -598,6 +596,16 @@ rechazarTareas(): void {
     tarea.estado = 0; // Cambiar a "NO"
     this.actualizarEstado(tarea); // Guardar el cambio automáticamente
   });
+}
+
+// Función para verificar si todas las tareas están en estado "SI"
+todasLasTareasFirmadas(): boolean {
+  return this.tareasDelGrupo.every(tarea => tarea.estado === 1); // Verifica si todas están en estado "SI"
+}
+
+// Función para verificar si todas las tareas están en estado "SI"
+todasLasTareasRechazadas(): boolean {
+  return this.tareasDelGrupo.every(tarea => tarea.estado === 0); // Verifica si todas están en estado "NO"
 }
 
 

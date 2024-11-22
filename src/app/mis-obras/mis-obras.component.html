@@ -76,32 +76,20 @@
               </thead>
               <tbody>
                 <tr *ngFor="let tarea of tareasDelGrupo">
-                  <td>{{ tarea.id }}</td>
-                  <td>{{ tarea.nombre }}</td>
-                  <td>
-                    <!-- Radio Buttons con Clases Dinámicas y Evento Change -->
-                    <mat-radio-group [(ngModel)]="tarea.estado">
-                      <mat-radio-button 
-                        [value]="1" 
-                        [ngClass]="{ 'radio-seleccionado': tarea.estado === 1 }" 
-                        (change)="actualizarEstado(tarea)">
-                        SI
-                      </mat-radio-button>
-                      <mat-radio-button 
-                        [value]="0" 
-                        [ngClass]="{ 'radio-no-seleccionado': tarea.estado === 0 }" 
-                        (change)="actualizarEstado(tarea)">
-                        NO
-                      </mat-radio-button>
-                      <mat-radio-button 
-                        [value]="null" 
-                        [ngClass]="{ 'radio-pendiente': tarea.estado === null }" 
-                        (change)="actualizarEstado(tarea)">
-                        P
-                      </mat-radio-button>
-                    </mat-radio-group>
-                  </td>
-                </tr>
+                    <td>{{ tarea.id }}</td>
+                    <td>{{ tarea.nombre }}</td>
+                    <td>
+                      <!-- Mostrar el estado como texto -->
+                      <span 
+                        [ngClass]="{
+                          'estado-si': tarea.estado === 1,
+                          'estado-no': tarea.estado === 0,
+                          'estado-pendiente': tarea.estado === null
+                        }">
+                        {{ tarea.estado === 1 ? 'SI' : tarea.estado === 0 ? 'NO' : 'PENDIENTE' }}
+                      </span>
+                    </td>
+                  </tr>
                 
                 
               </tbody>
@@ -110,10 +98,10 @@
         </div>
   
         <div class="modal-footer">
-          <button mat-flat-button class="mat-flat-button firmar" (click)="firmarTareas()">
-            Firmar
-          </button>
-          <button mat-flat-button class="mat-flat-button rechazar" (click)="rechazarTareas()">
+            <button mat-flat-button class="mat-flat-button firmar" *ngIf="todasLasTareasFirmadas()" (click)="firmarTareas()">
+                Firmar
+            </button>
+            <button mat-flat-button class="mat-flat-button firmar" *ngIf="todasLasTareasRechazadas()" (click)="rechazarTareas()">
             Rechazar
           </button>
           <button mat-flat-button class="mat-flat-button cancelar" (click)="closeModalActa()">

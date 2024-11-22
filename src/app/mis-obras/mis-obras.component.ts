@@ -594,6 +594,18 @@ firmarTareas(): void {
   });
 }
 
+// Función para verificar si todas las tareas están en estado "SI"
+todasLasTareasFirmadas(): boolean {
+  return this.tareasDelGrupo.every(tarea => tarea.estado === 1); // Verifica si todas están en estado "SI"
+}
+
+// Función para verificar si todas las tareas están en estado "SI"
+todasLasTareasRechazadas(): boolean {
+  return this.tareasDelGrupo.every(tarea => tarea.estado === 0); // Verifica si todas están en estado "NO"
+}
+
+
+
 rechazarTareas(): void {
   this.tareasDelGrupo.forEach(tarea => {
     tarea.estado = 0; // Cambiar a "NO"
