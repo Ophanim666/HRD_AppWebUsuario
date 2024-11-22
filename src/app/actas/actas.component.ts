@@ -120,12 +120,15 @@ export class ActasComponent implements OnInit {
   uploadedFiles: Archivo[] = [];
   archivosSeleccionados: any[] = [];
 
+  //
+  archivosEnBase64: { fileName: string, base64: string }[] = [];
+
 
   // Variables para manejo de errores
   showErrorModal = false;
   errorMessage: { message: string, isError: boolean } = { message: '', isError: true };
-  
-  
+
+
 
   // URLs de la API
   private apiUrl = 'https://localhost:7125/api/Parametro';
@@ -205,45 +208,50 @@ export class ActasComponent implements OnInit {
 
 // Función que se llama cuando el usuario selecciona archivos
 onFileSelected(event: any): void {
-  // Obtener los archivos seleccionados
   const files: FileList = event.target.files;
-  
   if (files) {
     this.archivosSeleccionados = Array.from(files);
-    console.log('Archivos seleccionados:', this.archivosSeleccionados);
+    this.archivosEnBase64 = [];
+
+    this.archivosSeleccionados.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        this.archivosEnBase64.push({
+          base64: base64String.split(',')[1], // Remover el prefijo "data:image/png;base64,"
+          fileName: file.name
+        });
+      };
+      reader.readAsDataURL(file);
+    });
   }
 }
 
-// Función para manejar el envío de los archivos al servidor
+
 uploadFiles(): void {
-  const formData = new FormData();
+  // Enviar cada archivo en base64 al servidor
+  this.archivosEnBase64.forEach(archivo => {
+    const archivoData = {
+      grupo_Tarea_Id: 9,           // El ID del grupo de tarea
+      nombre_Archivo: archivo.fileName,  // Nombre del archivo
+      ruta_Archivo: 'string',      // Ruta del archivo (si es necesario)
+      tipo_Imagen: 'string',       // Tipo de la imagen (si es necesario)
+      contenidoBase64: archivo.base64  // Contenido del archivo en base64
+    };
 
-  // Agregar el archivo al FormData
-  this.archivosSeleccionados.forEach(file => {
-    formData.append('file', file, file.name); // Asegúrate de que tu backend acepte el nombre 'file'
-  });
-
-  // Crear objeto para otros datos
-  const archivo = {
-    grupo_Tarea_Id: 9,
-    nombre_Archivo: "nombre",
-    ruta_Archivo: "string",
-    tipo_Imagen: "string"
-  };
-
-  // Adjuntar información adicional como un JSON embebido en FormData
-  formData.append('archivo', new Blob([JSON.stringify(archivo)], { type: 'application/json' }));
-  console.log('FormData', formData);
-  // Hacer la solicitud HTTP
-  this.http.post(`${this.apiUrlArchivo}/add`, formData).subscribe({
-    next: (response: any) => {
-      console.log('Archivos subidos con éxito:', response);
-    },
-    error: (error) => {
-      console.error('Error al subir los archivos:', error);
-    }
+    // Hacer la solicitud HTTP para subir el archivo
+    this.http.post(`${this.apiUrlArchivo}/add`, archivoData).subscribe({
+      next: (response: any) => {
+        console.log('Archivo subido con éxito:', response);
+      },
+      error: (error) => {
+        console.error('Error al subir el archivo:', error);
+      }
+    });
   });
 }
+
+
 // ..................................................................................................
 
 
@@ -329,12 +337,12 @@ updateFile(fileId: number, updatedData: any): void {
   loadActasFiltered(): void {
     // Obtener los IDs únicos de las actas del usuario
     const actaIds = [...new Set(this.userActas.map(ua => ua.acta))];
-    
+
     this.http.get<any>(`${this.apiUrlActas}/Listar`).subscribe({
       next: response => {
         if (response.estado.ack) {
           // Filtrar solo las actas que están en userActas
-          this.actas = response.body.response.filter((acta: Acta) => 
+          this.actas = response.body.response.filter((acta: Acta) =>
             actaIds.includes(acta.id!)
           );
           this.updatePageActa();
@@ -515,7 +523,7 @@ updateFile(fileId: number, updatedData: any): void {
           const tipoEstadoActa = this.tipoParametros.find(
             tipo => tipo.tipO_PARAMETRO === "Estado Acta"
           );
-  
+
           // Si encontramos el ID, filtramos los parámetros
           if (tipoEstadoActa) {
             this.parametros = response.body.response.filter(
@@ -525,7 +533,7 @@ updateFile(fileId: number, updatedData: any): void {
             console.warn('No se encontró el tipo de parámetro "Estado Acta".');
             this.parametros = [];
           }
-  
+
           this.updatePageActa();
         } else {
           this.showError(`Error al cargar los Parámetros: ${response.estado.errDes}`, true);
@@ -581,11 +589,11 @@ updateFile(fileId: number, updatedData: any): void {
   // Modificar el método openModalActa para usar el nuevo filtrado
   openModalActa(acta?: Acta): void {
     this.currentActa = acta ? { ...acta } : this.getEmptyActa();
-    
+
     if (acta && acta.id) {
       this.filtrarTareasPorActa(acta.id);
     }
-    
+
     this.showModalActa = true;
     document.body.classList.add('modal-open');
   }
@@ -618,69 +626,69 @@ updateFile(fileId: number, updatedData: any): void {
   getProveedorNombre(id: number): string {
     // console.log('ID recibido proveedor:', id); // Ver qué ID llega
     //console.log('Lista de tipos:', this.tipoParametros); // Ver qué tipos tenemos disponibles
-    
+
     const proveedor = this.proveedor.find(elemento => {
         //console.log('Comparando:aaaaa', elemento.id, 'con aaaa', id); // Ver las comparaciones
         return elemento.iDproveedor === id;
     });
-    
+
     if (!proveedor) {
         //console.log(`No se encontró proveedor para ID: ${id}`);
         return `Tipo ${id}`;
     }
-    
-    return proveedor.nombreProveedor; 
+
+    return proveedor.nombreProveedor;
   }
 
   getObraNombre(id: number): string {
     // console.log('ID recibido obra:', id); // Ver qué ID llega
     //console.log('Lista de tipos:', this.tipoParametros); // Ver qué tipos tenemos disponibles
-    
+
     const obra = this.obra.find(elemento => {
         //console.log('Comparando:aaaaa', elemento.id, 'con aaaa', id); // Ver las comparaciones
         return elemento.id === id;
     });
-    
+
     if (!obra) {
         //console.log(`No se encontró proveedor para ID: ${id}`);
         return `Tipo ${id}`;
     }
-    
-    return obra.nombre; 
+
+    return obra.nombre;
   }
 
   getEspecialidadNombre(id: number): string {
     // console.log('ID recibido:', id); // Ver qué ID llega
     //console.log('Lista de tipos:', this.tipoParametros); // Ver qué tipos tenemos disponibles
-    
+
     const especialidad = this.especialidad.find(elemento => {
        // console.log('Comparando:', elemento.id, 'con', id); // Ver las comparaciones
         return elemento.id === id;
     });
-    
+
     if (!especialidad) {
         //console.log(`No se encontró especialidad para ID: ${id}`);
         return `Tipo ${id}`;
     }
-    
-    return especialidad.nombre; 
+
+    return especialidad.nombre;
   }
 
   getUsuarioNombre(id: number): string {
     // console.log('ID recibido:', id); // Ver qué ID llega
     //console.log('Lista de tipos:', this.tipoParametros); // Ver qué tipos tenemos disponibles
-    
+
     const usuario = this.usuario.find(elemento => {
         //console.log('Comparando:', elemento.id, 'con', id); // Ver las comparaciones
         return elemento.id === id;
     });
-    
+
     if (!usuario) {
         //console.log(`No se encontró usuario para ID: ${id}`);
         return `Tipo ${id}`;
     }
-    
-    return usuario.primer_nombre; 
+
+    return usuario.primer_nombre;
   }
 
   getEstadoNombre(id: number): string {
@@ -691,12 +699,12 @@ updateFile(fileId: number, updatedData: any): void {
         //console.log('Comparando:', elemento.id, 'con', id); // Ver las comparaciones
         return elemento.id === id;
     });
-    
+
     if (!estado) {
         //console.log(`No se encontró usuario para ID: ${id}`);
         return `Tipo ${id}`;
     }
-    
-    return estado.parametro; 
+
+    return estado.parametro;
   }
 }
