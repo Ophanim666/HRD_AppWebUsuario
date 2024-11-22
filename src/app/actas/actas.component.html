@@ -76,28 +76,55 @@
             </thead>
             <tbody>
               <tr *ngFor="let tarea of tareasDelGrupo">
-                <td>{{tarea.id}}</td>
-                <td>{{tarea.nombre}}</td>
-                <td></td>
-                <!-- <td>{{getEstadoTarea(tarea.estado)}}</td> -->
-                <!-- <td>{{tarea.fechaCreacion | date:'dd/MM/yyyy'}}</td> -->
+                <td>{{ tarea.id }}</td>
+                <td>{{ tarea.nombre }}</td>
+                <td>
+                  <!-- Radio Buttons con Clases Dinámicas y Evento Change -->
+                  <mat-radio-group [(ngModel)]="tarea.estado">
+                    <mat-radio-button 
+                      [value]="1" 
+                      [ngClass]="{ 'radio-seleccionado': tarea.estado === 1 }" 
+                      (change)="actualizarEstado(tarea)">
+                      SI
+                    </mat-radio-button>
+                    <mat-radio-button 
+                      [value]="0" 
+                      [ngClass]="{ 'radio-no-seleccionado': tarea.estado === 0 }" 
+                      (change)="actualizarEstado(tarea)">
+                      NO
+                    </mat-radio-button>
+                    <mat-radio-button 
+                      [value]="null" 
+                      [ngClass]="{ 'radio-pendiente': tarea.estado === null }" 
+                      (change)="actualizarEstado(tarea)">
+                      P
+                    </mat-radio-button>
+                  </mat-radio-group>
+                </td>
               </tr>
-              <tr *ngIf="tareasDelGrupo.length === 0">
-                <td colspan="4" class="text-center">No hay tareas asignadas a esta acta</td>
-              </tr>
+              
+              
             </tbody>
           </table>
         </div>
       </div>
 
       <div class="modal-footer">
+        <button mat-flat-button class="mat-flat-button firmar" (click)="firmarTareas()">
+          Firmar
+        </button>
+        <button mat-flat-button class="mat-flat-button rechazar" (click)="rechazarTareas()">
+          Rechazar
+        </button>
         <button mat-flat-button class="mat-flat-button cancelar" (click)="closeModalActa()">
           Cerrar
         </button>
+        <button mat-flat-button color="primary" (click)="downloadPDF()">
+          Descargar Reporte
+        </button>
       </div>
-    </div>
-  </div>
-</div>
+      
+
 
 <!-- Modal para mostrar errores  -->
 <div *ngIf="showErrorModal" class="modal error-modal">

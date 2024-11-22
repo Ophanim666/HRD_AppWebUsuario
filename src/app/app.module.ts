@@ -26,9 +26,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatRadioModule } from '@angular/material/radio';
+
 
 // HTTP Client
 import { HttpClientModule } from '@angular/common/http';
+import { MisObrasComponent } from './mis-obras/mis-obras.component';
 
 @NgModule({
   declarations: [
@@ -36,7 +39,8 @@ import { HttpClientModule } from '@angular/common/http';
     BodyComponent,
     LogInComponent,
     SidenavComponent,
-    ActasComponent
+    ActasComponent,
+    MisObrasComponent
   ],
   imports: [
     BrowserModule,
@@ -53,7 +57,8 @@ import { HttpClientModule } from '@angular/common/http';
     MatSelectModule,
     MatPaginatorModule,
     HttpClientModule,
-    MatDatepickerModule
+    MatDatepickerModule,
+    MatRadioModule
   ],
   providers: [
     provideAnimationsAsync(), //aqui se estan interceptando los tokens

@@ -7,6 +7,13 @@ export const navbarData = [
     label: 'Actas'
   },
 
+    //Vista de Mis Obras
+    {
+      RouterLink: 'mis-obras',
+      icon: 'fa-solid fa-gear',
+      label: 'Parámetros'
+    },
+
   {
     RouterLink: 'logout',
     icon: 'fa-solid fa-sign-out-alt',

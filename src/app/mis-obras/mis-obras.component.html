@@ -1,0 +1,144 @@
+<!-- Barra de búsqueda -->
+<div class="buscador-container">
+    <input
+      type="text"
+      placeholder="Buscar por nombre..."
+      [(ngModel)]="searchText"
+      (ngModelChange)="onSearchChange()"
+      class="buscador"
+    />
+  </div>
+  
+  <!-- Tabla -->
+  <table class="table-elegant">
+    <thead>
+      <tr>
+        <th>N° Acta</th>
+        <th>Obra</th>
+        <th>Proveedor</th>
+        <th>Especialidad</th>
+        <th>Administrador de Obra</th>
+        <th>Fecha de Aprobación</th>
+        <!-- <th>Observaciones</th> -->
+        <th>Estado de Obra</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let acta of pagedActas">
+        <td>{{acta.id}}</td>
+        <td>{{getObraNombre(acta.obrA_ID)}}</td>
+        <td>{{getProveedorNombre(acta.proveedoR_ID)}}</td>
+        <td>{{getEspecialidadNombre(acta.especialidaD_ID)}}</td>
+        <td>{{getUsuarioNombre(acta.revisoR_ID)}}</td>
+        <td>{{acta.fechA_APROBACION | date:'dd/MM/yyyy'}}</td>
+        <!-- <td>{{acta.observacion}}</td> -->
+        <td>{{getEstadoNombre(acta.estadO_ID)}}</td>
+        <td class="actions-column">
+          <div class="button-container">
+            <button mat-flat-button color="primary" class="mat-flat-button editar" (click)="openModalActa(acta)">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <!-- Paginación -->
+  <div class="paginador-container">
+    <mat-paginator
+      [length]="filteredActas().length"
+      [pageSize]="5"
+      [pageSizeOptions]="[5, 10, 20]"
+      (page)="onPageChange($event)">
+    </mat-paginator>
+  </div>
+  
+  <!-- Modal para ver tareas -->
+  <div *ngIf="showModalActa" class="modal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Tareas del acta</h3>
+        </div>
+  
+        <div class="modal-body">
+          <!-- Tabla de tareas -->
+          <div class="tareas-container">
+            <table class="table-elegant">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Tarea</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let tarea of tareasDelGrupo">
+                  <td>{{ tarea.id }}</td>
+                  <td>{{ tarea.nombre }}</td>
+                  <td>
+                    <!-- Radio Buttons con Clases Dinámicas y Evento Change -->
+                    <mat-radio-group [(ngModel)]="tarea.estado">
+                      <mat-radio-button 
+                        [value]="1" 
+                        [ngClass]="{ 'radio-seleccionado': tarea.estado === 1 }" 
+                        (change)="actualizarEstado(tarea)">
+                        SI
+                      </mat-radio-button>
+                      <mat-radio-button 
+                        [value]="0" 
+                        [ngClass]="{ 'radio-no-seleccionado': tarea.estado === 0 }" 
+                        (change)="actualizarEstado(tarea)">
+                        NO
+                      </mat-radio-button>
+                      <mat-radio-button 
+                        [value]="null" 
+                        [ngClass]="{ 'radio-pendiente': tarea.estado === null }" 
+                        (change)="actualizarEstado(tarea)">
+                        P
+                      </mat-radio-button>
+                    </mat-radio-group>
+                  </td>
+                </tr>
+                
+                
+              </tbody>
+            </table>
+          </div>
+        </div>
+  
+        <div class="modal-footer">
+          <button mat-flat-button class="mat-flat-button firmar" (click)="firmarTareas()">
+            Firmar
+          </button>
+          <button mat-flat-button class="mat-flat-button rechazar" (click)="rechazarTareas()">
+            Rechazar
+          </button>
+          <button mat-flat-button class="mat-flat-button cancelar" (click)="closeModalActa()">
+            Cerrar
+          </button>
+          <button mat-flat-button color="primary" (click)="downloadPDF()">
+            Descargar Reporte
+          </button>
+        </div>
+        
+  
+  
+  <!-- Modal para mostrar errores  -->
+  <div *ngIf="showErrorModal" class="modal error-modal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header error">
+          <h6>{{ errorMessage.isError ? '¡Error!' : '¡Éxito!' }}</h6>
+        </div>
+        <div class="modal-body">
+          <p>{{ errorMessage.message }}</p>
+        </div>
+        <div class="modal-footer">
+          <button mat-flat-button class="mat-flat-button cerrar" (click)="closeErrorModal()">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>

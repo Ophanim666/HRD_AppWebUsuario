@@ -8,6 +8,7 @@ import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
+
 interface TipoParametro {
   id: number;
   tipO_PARAMETRO: string;
@@ -86,11 +87,11 @@ interface UserActa {
 
 @Component({
   selector: 'app-actas',
-  templateUrl: './actas.component.html',
-  styleUrl: './actas.component.css'
+  templateUrl: './mis-obras.component.html',
+  styleUrl: './mis-obras.component.css'
 })
 
-export class ActasComponent implements OnInit {
+export class MisObrasComponent implements OnInit {
 
   // Variables de clase
   actas: Acta[] = [];
@@ -156,7 +157,7 @@ export class ActasComponent implements OnInit {
 
   // Nueva función para cargar las actas del usuario
   loadUserActas(): void {
-    this.http.get<any>('https://localhost:7125/api/Acta/user-actas').subscribe({
+    this.http.get<any>('https://localhost:7125/api/Acta/revisor-actas').subscribe({
       next: response => {
         if (response.body?.response) {
           this.userActas = response.body.response;
@@ -573,7 +574,7 @@ actualizarEstado(tarea: any): void {
     estado: tarea.estado,
   };
 
-  this.http.post('https://localhost:7125/api/GrupoTarea/ActualizarEstadoTarea', payload).subscribe({
+  this.http.post('http://localhost:5000/api/grupoTareas/actualizarEstadoTareaEnGrupo', payload).subscribe({
     next: response => {
       console.log(`Estado actualizado correctamente para la tarea ${tarea.id}:`, response);
     },
@@ -599,7 +600,6 @@ rechazarTareas(): void {
     this.actualizarEstado(tarea); // Guardar el cambio automáticamente
   });
 }
-
 
 downloadPDF(): void {
   if (!this.tareasDelGrupo || this.tareasDelGrupo.length === 0) {
@@ -632,8 +632,6 @@ downloadPDF(): void {
   // Guardar el PDF
   doc.save('Tareas_Grupo.pdf');
 }
-
-
 
 
 }
