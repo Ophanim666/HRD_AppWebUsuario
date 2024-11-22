@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { NgForm } from '@angular/forms';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
@@ -80,6 +80,15 @@ interface UserActa {
   tarea: number;
 }
 
+interface Archivo{
+  id: string;
+  grupo_Tarea_Id: number;
+  nombre_Archivo: string;
+  ruta_Archivo: string;
+  tipo_Imagen: string;
+  contenidoBase64: string;
+}
+
 @Component({
   selector: 'app-actas',
   templateUrl: './actas.component.html',
@@ -102,15 +111,20 @@ export class ActasComponent implements OnInit {
   tareasDelGrupo: Tarea[] = [];
   estadosTarea: EstadoTarea[] = [];
   userActas: UserActa[] = [];
+
   showModalActa = false;
   searchText: string = '';
   pagedActas: any[] = [];
 
+  archivos: Archivo[] = [];
+  uploadedFiles: Archivo[] = [];
+  archivosSeleccionados: any[] = [];
 
 
   // Variables para manejo de errores
   showErrorModal = false;
   errorMessage: { message: string, isError: boolean } = { message: '', isError: true };
+  
   
 
   // URLs de la API
@@ -123,8 +137,10 @@ export class ActasComponent implements OnInit {
   private apiUrlObras = 'https://localhost:7125/api/Obra';
   private apiUrlGrupoTarea = 'https://localhost:7125/api/GrupoTarea';
   private apiUrlTarea = 'https://localhost:7125/api/Tarea';
+  private apiUrlArchivo = 'https://localhost:7125/api/Archivo';
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('fileInput', { static: false }) fileInput!: ElementRef<HTMLInputElement>;
 
   constructor(private http: HttpClient) {}
 
@@ -138,18 +154,140 @@ export class ActasComponent implements OnInit {
     this.loadObras();
     this.loadTareas();
     this.loadGruposTareas();
+    this.listFiles();
   }
 
 // ................................................................................................
 
 
 
+// // Maneja la selección de archivo
+// onFileSelected(event: Event): void {
+//   const input = event.target as HTMLInputElement;
+//   if (input.files && input.files.length > 0) {
+//     const file = input.files[0];
+//     this.uploadFile(file);
+//   }
+// }
+
+// // Llama al endpoint para agregar un archivo
+// uploadFiles(): void {
+//   if (!this.selectedFiles.length) {
+//     alert('No hay archivos seleccionados.');
+//     return;
+//   }
+
+//   this.selectedFiles.forEach((file) => {
+//     this.uploadFile(file);
+//     console.log('Consola:', File);
+//   });
+
+//   this.selectedFiles = []; // Limpia la selección después de cargar
+// }
+
+// uploadFile(file: File): void {
+//   console.log('Consola:', this.archivos);
+//   const formData = new FormData();
+//   formData.append('file', file);
+//   console.log('Consola:', formData);
+//   this.http.post(`${this.apiUrlArchivo}/add`, formData).subscribe({
+//     next: (response) => {
+//       console.log('Archivo subido exitosamente:', response);
+//       alert('Archivo subido exitosamente');
+//       this.listFiles(); // Actualiza la lista
+//     },
+//     error: (err) => {
+//       console.error(`Error al subir el archivo "${file.name}":`, err);
+//       alert('Hubo un error al subir el archivo.');
+//     },
+//   });
+// }
+
+// Función que se llama cuando el usuario selecciona archivos
+onFileSelected(event: any): void {
+  // Obtener los archivos seleccionados
+  const files: FileList = event.target.files;
+  
+  if (files) {
+    this.archivosSeleccionados = Array.from(files);
+    console.log('Archivos seleccionados:', this.archivosSeleccionados);
+  }
+}
+
+// Función para manejar el envío de los archivos al servidor
+uploadFiles(): void {
+  const formData = new FormData();
+
+  // Agregar el archivo al FormData
+  this.archivosSeleccionados.forEach(file => {
+    formData.append('file', file, file.name); // Asegúrate de que tu backend acepte el nombre 'file'
+  });
+
+  // Crear objeto para otros datos
+  const archivo = {
+    grupo_Tarea_Id: 9,
+    nombre_Archivo: "nombre",
+    ruta_Archivo: "string",
+    tipo_Imagen: "string"
+  };
+
+  // Adjuntar información adicional como un JSON embebido en FormData
+  formData.append('archivo', new Blob([JSON.stringify(archivo)], { type: 'application/json' }));
+  console.log('FormData', formData);
+  // Hacer la solicitud HTTP
+  this.http.post(`${this.apiUrlArchivo}/add`, formData).subscribe({
+    next: (response: any) => {
+      console.log('Archivos subidos con éxito:', response);
+    },
+    error: (error) => {
+      console.error('Error al subir los archivos:', error);
+    }
+  });
+}
+// ..................................................................................................
 
 
+// ...............................................................................................................
+// Llama al endpoint para listar archivos
+listFiles(): void {
+  this.http.get<any[]>(`${this.apiUrlArchivo}/ListarArchivos`).subscribe({
+    next: (response) => {
+      this.uploadedFiles = response;
+    },
+    error: (err) => {
+      console.error('Error al listar archivos:', err);
+      alert('Hubo un error al obtener la lista de archivos.');
+    }
+  });
+}
 
+// Llama al endpoint para eliminar un archivo por su ID
+deleteFile(fileId: number): void {
+  this.http.delete(`${this.apiUrlArchivo}/${fileId}`).subscribe({
+    next: () => {
+      alert('Archivo eliminado exitosamente');
+      this.listFiles(); // Actualiza la lista
+    },
+    error: (err) => {
+      console.error('Error al eliminar archivo:', err);
+      alert('Hubo un error al eliminar el archivo.');
+    }
+  });
+}
 
-
-
+// Llama al endpoint para actualizar un archivo
+updateFile(fileId: number, updatedData: any): void {
+  this.http.put(`${this.apiUrlArchivo}/${fileId}`, updatedData).subscribe({
+    next: () => {
+      alert('Archivo actualizado exitosamente');
+      this.listFiles(); // Actualiza la lista
+    },
+    error: (err) => {
+      console.error('Error al actualizar archivo:', err);
+      alert('Hubo un error al actualizar el archivo.');
+    }
+  });
+}
 
 
 

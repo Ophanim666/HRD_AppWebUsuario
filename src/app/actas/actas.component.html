@@ -91,12 +91,19 @@
         <br>
 
 <!-- .............................................................. -->
-          <div class="upload-container">
-            <label for="file-upload" class="upload-button">
-              Adjuntar Archivos
-            </label>
-            <input id="file-upload" type="file" multiple />
-          </div>
+         <!-- Sección para subir archivos -->
+         <div class="upload-container">
+          <label for="file-upload" class="upload-button">
+            Adjuntar Archivos
+          </label>
+          <input id="file-upload" type="file" multiple (change)="onFileSelected($event)" />
+        </div>
+        <div class="upload-container">
+          <button mat-flat-button class="mat-flat-button cancelar" (click)="uploadFiles()">
+            Subir Archivos
+          </button>
+        </div>
+      
 
 <!-- ............................................................ -->
       
