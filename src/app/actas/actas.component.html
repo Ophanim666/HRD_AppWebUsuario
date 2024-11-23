@@ -76,28 +76,78 @@
             </thead>
             <tbody>
               <tr *ngFor="let tarea of tareasDelGrupo">
-                <td>{{tarea.id}}</td>
-                <td>{{tarea.nombre}}</td>
-                <td></td>
-                <!-- <td>{{getEstadoTarea(tarea.estado)}}</td> -->
-                <!-- <td>{{tarea.fechaCreacion | date:'dd/MM/yyyy'}}</td> -->
-              </tr>
-              <tr *ngIf="tareasDelGrupo.length === 0">
-                <td colspan="4" class="text-center">No hay tareas asignadas a esta acta</td>
+                <td>{{ tarea.id }}</td>
+                <td>{{ tarea.nombre }}</td>
+                <td>
+                  <!-- Radio Buttons con Clases Dinámicas y Evento Change -->
+                  <mat-radio-group [(ngModel)]="tarea.estado" (ngModelChange)="actualizarEstado(tarea)">
+                    <mat-radio-button 
+                      [value]="1" 
+                      [ngClass]="{ 'radio-seleccionado': tarea.estado === 1 }">
+                      SI
+                    </mat-radio-button>
+                    <mat-radio-button 
+                      [value]="0" 
+                      [ngClass]="{ 'radio-no-seleccionado': tarea.estado === 0 }">
+                      NO
+                    </mat-radio-button>
+                    <mat-radio-button 
+                      [value]="null" 
+                      [ngClass]="{ 'radio-pendiente': tarea.estado === null }">
+                      P
+                    </mat-radio-button>
+                  </mat-radio-group>
+                </td>
               </tr>
             </tbody>
           </table>
+          
+        </div>
+        <div class="upload-container">
+          <label for="file-upload" class="upload-button">
+            Adjuntar Archivos
+          </label>
+          <input id="file-upload" type="file" multiple (change)="onFileSelected($event)" />
+        </div>
+
+        <!-- nombre de los archivos -->
+        <div class="file-list" *ngIf="archivosSeleccionados.length > 0">
+          <p *ngFor="let archivo of archivosSeleccionados">
+            Archivo: {{ archivo.name }}
+          </p>
+        </div>
+
+        <div class="upload-container">
+          <button 
+            mat-flat-button 
+            class="mat-flat-button subir" 
+            (click)="uploadFiles()" 
+            [disabled]="archivosSeleccionados.length === 0">
+            Subir Archivos
+          </button>
+          <button 
+            mat-flat-button 
+            class="mat-flat-button cancelar" 
+            (click)="cancelUpload()" 
+            [disabled]="archivosSeleccionados.length === 0">
+            Cancelar
+          </button>
         </div>
       </div>
 
       <div class="modal-footer">
+        <button mat-flat-button class="mat-flat-button firmar" (click)="firmarGrupoTarea()">
+          Firmar
+      </button>
+      <button mat-flat-button class="mat-flat-button firmar"  (click)="rechazarGrupoTarea()">
+          Rechazar
+        </button>
         <button mat-flat-button class="mat-flat-button cancelar" (click)="closeModalActa()">
           Cerrar
         </button>
       </div>
-    </div>
-  </div>
-</div>
+      
+
 
 <!-- Modal para mostrar errores  -->
 <div *ngIf="showErrorModal" class="modal error-modal">

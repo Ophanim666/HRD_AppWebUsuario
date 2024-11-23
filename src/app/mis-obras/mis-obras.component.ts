@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { NgForm } from '@angular/forms';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
@@ -7,6 +7,7 @@ import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 /*se importa el pkg de JSPDF */
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+
 
 interface TipoParametro {
   id: number;
@@ -61,7 +62,6 @@ interface GrupoTarea {
   usuarioCreacion: string | null;
   fechaCreacion: string;
   idTarea: number[];
-  estado: number;
 }
 
 interface Tarea {
@@ -83,25 +83,15 @@ interface UserActa {
   rol: number;
   encargado: number;
   tarea: number;
-  estado: number;
-}
-
-interface Archivo{
-  id: string;
-  grupo_Tarea_Id: number;
-  nombre_Archivo: string;
-  ruta_Archivo: string;
-  tipo_Imagen: string;
-  contenidoBase64: string;
 }
 
 @Component({
   selector: 'app-actas',
-  templateUrl: './actas.component.html',
-  styleUrl: './actas.component.css'
+  templateUrl: './mis-obras.component.html',
+  styleUrl: './mis-obras.component.css'
 })
 
-export class ActasComponent implements OnInit {
+export class MisObrasComponent implements OnInit {
 
   // Variables de clase
   actas: Acta[] = [];
@@ -114,26 +104,12 @@ export class ActasComponent implements OnInit {
   obra: Obra[] = [];
   gruposTareas: GrupoTarea[] = [];
   tareas: Tarea[] = [];
-  tareasDelGrupo: any[] = [];
+  tareasDelGrupo: Tarea[] = [];
   estadosTarea: EstadoTarea[] = [];
   userActas: UserActa[] = [];
   showModalActa = false;
   searchText: string = '';
   pagedActas: any[] = [];
-  firmaGrupo: any[]=[];
-
-  //adjuntar archivo
-  archivos: Archivo[] = [];
-  uploadedFiles: Archivo[] = [];
-  archivosSeleccionados: any[] = [];
-  grupos:any[] = [];
-
-  //
-  archivosEnBase64: { fileName: string, base64: string }[] = [];
-
-
-
-  private grupoId: any;
 
   // Variables para manejo de errores
   showErrorModal = false;
@@ -149,11 +125,8 @@ export class ActasComponent implements OnInit {
   private apiUrlObras = 'https://localhost:7125/api/Obra';
   private apiUrlGrupoTarea = 'https://localhost:7125/api/GrupoTarea';
   private apiUrlTarea = 'https://localhost:7125/api/Tarea';
-  private apiUrlArchivo = 'https://localhost:7125/api/Archivo';
-  
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild('fileInput', { static: false }) fileInput!: ElementRef<HTMLInputElement>;
 
   constructor(private http: HttpClient) {}
 
@@ -184,7 +157,7 @@ export class ActasComponent implements OnInit {
 
   // Nueva función para cargar las actas del usuario
   loadUserActas(): void {
-    this.http.get<any>('https://localhost:7125/api/Acta/user-actas').subscribe({
+    this.http.get<any>('https://localhost:7125/api/Acta/revisor-actas').subscribe({
       next: response => {
         if (response.body?.response) {
           this.userActas = response.body.response;
@@ -454,45 +427,20 @@ export class ActasComponent implements OnInit {
     this.paginator.length = filtered.length;
   }
 
-  // // Modificar el método openModalActa para usar el nuevo filtrado
-  // openModalActa(acta?: Acta): void {
-  //   this.currentActa = acta ? { ...acta } : this.getEmptyActa();
+  // Modificar el método openModalActa para usar el nuevo filtrado
+  openModalActa(acta?: Acta): void {
+    this.currentActa = acta ? { ...acta } : this.getEmptyActa();
     
-  //   if (acta && acta.id) {
-  //     this.filtrarTareasPorActa(acta.id);
-  //   }
-    
-  //   this.showModalActa = true;
-  //   document.body.classList.add('modal-open');
-  // }
-
-  openModalActa(acta: any): void {
-    
-    // Buscar el grupo correspondiente al acta seleccionada
-    const grupoTarea = this.userActas.find((item: any) => item.acta === acta.id)?.grupo;
-    this.grupoId=grupoTarea;
-    if (grupoTarea) {
-      // Filtrar las tareas asociadas al grupo
-      const tareasDelGrupo = this.userActas.filter((item: any) => item.grupo === grupoTarea);
-      console.log("aca va el id del grupo", grupoTarea)
-      // Procesar las tareas para mostrarlas en el modal
-      this.tareasDelGrupo = tareasDelGrupo.map((tarea: any) => ({
-        id: tarea.tarea, // ID de la tarea
-        nombre: this.getTareaNombre(tarea.tarea), // Opcional: método para obtener el nombre de la tarea
-        estado: tarea.estado, // Inicializar con estado nulo si no viene en el JSON
-        grupoTareaId: grupoTarea
-      }));
-  
-      this.showModalActa = true;
-    } else {
-      console.error(`No se encontró un grupo de tareas para el acta con ID: ${acta.id}`);
-      this.showError('No se encontraron tareas para este acta.', true);
+    if (acta && acta.id) {
+      this.filtrarTareasPorActa(acta.id);
     }
+    
+    this.showModalActa = true;
+    document.body.classList.add('modal-open');
   }
 
   // Función para cerrar el modal
   closeModalActa(): void {
-    this.loadUserActas();
     this.showModalActa = false;
     document.body.classList.remove('modal-open');
   }
@@ -601,23 +549,6 @@ export class ActasComponent implements OnInit {
     return estado.parametro; 
   }
 
-  getTareaNombre(id: number): string {
-    //console.log('ID recibido proveed:', id); // Ver qué ID llega
-    ////console.log('Lista de tipos:', this.tipoParametros); // Ver qué tipos tenemos disponibles
-    
-    const tarea = this.tareas.find(elemento => {
-        ////console.log('Comparando:aaaaa', elemento.id, 'con aaaa', id); // Ver las comparaciones
-        return elemento.id === id;
-    });
-    
-    if (!tarea) {
-        ////console.log(`No se encontró proveedor para ID: ${id}`);
-        return `Tipo ${id}`;
-    }
-    
-    return tarea.nombre; 
-  }
-
   guardarEstados(): void {
   const tareasConEstado = this.tareasDelGrupo.map(tarea => ({
     id: tarea.id,
@@ -637,14 +568,13 @@ export class ActasComponent implements OnInit {
 }
 
 actualizarEstado(tarea: any): void {
-
   const payload = {
-    //grupoTareaId: tarea.grupoTareaId, // Ajusta estos campos según tu modelo
-    //tareaId: tarea.id,
+    grupoTareaId: tarea.grupoTareaId, // Ajusta estos campos según tu modelo
+    tareaId: tarea.id,
     estado: tarea.estado,
   };
 
-  this.http.put(`${this.apiUrlGrupoTarea}/ActualizarEstadoTarea/${tarea.grupoTareaId}/${tarea.id}`, payload).subscribe({
+  this.http.post('http://localhost:5000/api/grupoTareas/actualizarEstadoTareaEnGrupo', payload).subscribe({
     next: response => {
       console.log(`Estado actualizado correctamente para la tarea ${tarea.id}:`, response);
     },
@@ -655,118 +585,33 @@ actualizarEstado(tarea: any): void {
   });
 }
 
-firmarGrupoTarea(): void {
-  console.log("acta", this.grupoId)
-  const payload = {
-    //grupoTareaId: tarea.grupoTareaId, // Ajusta estos campos según tu modelo
-    //tareaId: tarea.id,
-    estado: 1,
-  };
 
-  //const grupoTarea = this.userActas.find((item: any) => item.acta === acta.id)?.grupo;
-  const grupoTarea = this.grupoId;
-  console.log("id grupo", grupoTarea)
-  this.http.put(`${this.apiUrlGrupoTarea}/ActualizarEstadoFirma/${grupoTarea}`, payload).subscribe({
-    next: response => {
-      console.log(`Estado actualizado correctamente para la tarea ${grupoTarea}:`, response);
-    },
-    error: error => {
-      console.error(`Error al actualizar el estado de la tarea ${grupoTarea}:`, error);
-      alert('Ocurrió un error al actualizar el estado.');
-    }
+
+firmarTareas(): void {
+  this.tareasDelGrupo.forEach(tarea => {
+    tarea.estado = 1; // Cambiar a "SI"
+    this.actualizarEstado(tarea); // Guardar el cambio automáticamente
   });
 }
 
-rechazarGrupoTarea(): void {
-  console.log("acta", this.grupoId)
-  const payload = {
-    //grupoTareaId: tarea.grupoTareaId, // Ajusta estos campos según tu modelo
-    //tareaId: tarea.id,
-    estado: 0,
-  };
+// Función para verificar si todas las tareas están en estado "SI"
+todasLasTareasFirmadas(): boolean {
+  return this.tareasDelGrupo.every(tarea => tarea.estado === 1); // Verifica si todas están en estado "SI"
+}
 
-  //const grupoTarea = this.userActas.find((item: any) => item.acta === acta.id)?.grupo;
-  const grupoTarea = this.grupoId;
-  console.log("id grupo", grupoTarea)
-  this.http.put(`${this.apiUrlGrupoTarea}/ActualizarEstadoFirma/${grupoTarea}`, payload).subscribe({
-    next: response => {
-      console.log(`Estado actualizado correctamente para la tarea ${grupoTarea}:`, response);
-    },
-    error: error => {
-      console.error(`Error al actualizar el estado de la tarea ${grupoTarea}:`, error);
-      alert('Ocurrió un error al actualizar el estado.');
-    }
+// Función para verificar si todas las tareas están en estado "SI"
+todasLasTareasRechazadas(): boolean {
+  return this.tareasDelGrupo.every(tarea => tarea.estado === 0); // Verifica si todas están en estado "NO"
+}
+
+
+
+rechazarTareas(): void {
+  this.tareasDelGrupo.forEach(tarea => {
+    tarea.estado = 0; // Cambiar a "NO"
+    this.actualizarEstado(tarea); // Guardar el cambio automáticamente
   });
 }
-
-onFileSelected(event: Event): void {
-  const input = event.target as HTMLInputElement;
-  if (input.files) {
-    this.archivosSeleccionados = Array.from(input.files); // Almacena archivos seleccionados
-    this.archivosEnBase64 = []; // Reinicia la lista de archivos en base64
-
-    // Convertir archivos a base64
-    this.archivosSeleccionados.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        this.archivosEnBase64.push({
-          base64: base64String.split(',')[1], // Quitar prefijo "data:image/png;base64,"
-          fileName: file.name,
-        });
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-}
-
-uploadFiles(): void {
-  if (this.archivosSeleccionados.length === 0) {
-    this.showError('No hay archivos seleccionados para subir.', true);  // Usar showError para mensajes de error
-    return;
-  }
-  // Procesar cada archivo
-  this.archivosEnBase64.forEach(archivo => {
-    const archivoData = {
-      grupo_Tarea_Id: this.grupoId,
-      nombre_Archivo: archivo.fileName,
-      ruta_Archivo: 'string',
-      tipo_Imagen: 'string',
-      contenidoBase64: archivo.base64,
-    };
-
-    this.http.post(`${this.apiUrlArchivo}/add`, archivoData).subscribe({
-      next: (response: any) => {
-        if (response.estado.ack) {
-          this.showError('Archivo subido exitosamente.', false);  // Mensaje de éxito
-        } else {
-          this.showError(`Error al subir el archivo: ${response.estado.errDes}`, true);  // Mensaje de error
-        }
-      },
-      error: (err) => {
-        console.error('Error al subir archivo:', err);
-        this.showError('Hubo un error al subir el archivo.', true);  // Mensaje de error
-      },
-    });
-  });
-
-  // Limpia los archivos seleccionados después de subirlos
-  this.archivosSeleccionados = [];
-}
-
-cancelUpload(): void {
-  this.archivosSeleccionados = [];
-  this.archivosEnBase64 = [];
-
-  // Restablece el valor del input de archivos
-  const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-  if (fileInput) {
-    fileInput.value = ''; // Esto limpia la selección del input
-  }
-
-  console.log('Selección de archivos cancelada.');
-}
-
 
 downloadPDF(): void {
   if (!this.tareasDelGrupo || this.tareasDelGrupo.length === 0) {
@@ -799,8 +644,6 @@ downloadPDF(): void {
   // Guardar el PDF
   doc.save('Tareas_Grupo.pdf');
 }
-
-
 
 
 }
