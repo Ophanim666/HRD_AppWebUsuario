@@ -115,6 +115,11 @@ export class MisObrasComponent implements OnInit {
   showErrorModal = false;
   errorMessage: { message: string, isError: boolean } = { message: '', isError: true };
 
+  private actaId: any;
+  private parametroFirmada: any;
+  private parametroRechazada: any;
+  
+
   // URLs de la API
   private apiUrl = 'https://localhost:7125/api/Parametro';
   private apiUrlTipoParametro = 'https://localhost:7125/api/TipoParametro';
@@ -140,6 +145,10 @@ export class MisObrasComponent implements OnInit {
     this.loadObras();
     this.loadTareas();
     this.loadGruposTareas();
+
+    // Llamada a la función para obtener el id del parámetro
+    const parametroId = this.getParametroIdByTipoParametroAndValor();
+    console.log("parametro id",parametroId);
   }
 
   // Función para obtener un objeto Parametro vacío
@@ -431,6 +440,13 @@ export class MisObrasComponent implements OnInit {
   openModalActa(acta?: Acta): void {
     this.currentActa = acta ? { ...acta } : this.getEmptyActa();
     
+
+    this.actaId=this.currentActa.id;
+    this.parametroFirmada=this.getParametroIdByTipoParametroAndValor();
+    this.parametroRechazada =this.getParametroIdByTipoParametroAndValorRechazada();
+
+    console.log("Id parametro: ", this.parametroFirmada)
+
     if (acta && acta.id) {
       this.filtrarTareasPorActa(acta.id);
     }
@@ -587,12 +603,61 @@ actualizarEstado(tarea: any): void {
 
 
 
-firmarTareas(): void {
-  this.tareasDelGrupo.forEach(tarea => {
-    tarea.estado = 1; // Cambiar a "SI"
-    this.actualizarEstado(tarea); // Guardar el cambio automáticamente
+// firmarTareas(): void {
+//   this.tareasDelGrupo.forEach(tarea => {
+//     tarea.estado = 1; // Cambiar a "SI"
+//     this.actualizarEstado(tarea); // Guardar el cambio automáticamente
+//   });
+// }
+firmarActa(): void {
+  //console.log("acta", this.grupoId)
+
+  
+
+
+  const payload = {
+    //grupoTareaId: tarea.grupoTareaId, // Ajusta estos campos según tu modelo
+    //tareaId: tarea.id,
+    idEstado: this.parametroFirmada,
+  };
+  console.log("estado del firmar", payload)
+  //const grupoTarea = this.userActas.find((item: any) => item.acta === acta.id)?.grupo;
+  const actaId = this.actaId;
+  console.log("id grupo", actaId)
+  this.http.put(`${this.apiUrlActas}/ActualizarActaFirma/${actaId}`, payload).subscribe({
+    next: response => {
+      console.log(`Estado actualizado correctamente para la tarea ${actaId}:`, response);
+    },
+    error: error => {
+      console.error(`Error al actualizar el estado de la tarea ${actaId}:`, error);
+      alert('Ocurrió un error al actualizar el estado.');
+    }
   });
 }
+
+rechazarActa(): void {
+  //console.log("acta", this.grupoId)
+
+  const payload = {
+    //grupoTareaId: tarea.grupoTareaId, // Ajusta estos campos según tu modelo
+    //tareaId: tarea.id,
+    idEstado: this.parametroRechazada,
+  };
+  console.log("estado del firmar", payload)
+  //const grupoTarea = this.userActas.find((item: any) => item.acta === acta.id)?.grupo;
+  const actaId = this.actaId;
+  console.log("id grupo", actaId)
+  this.http.put(`${this.apiUrlActas}/ActualizarActaFirma/${actaId}`, payload).subscribe({
+    next: response => {
+      console.log(`Estado actualizado correctamente para la tarea ${actaId}:`, response);
+    },
+    error: error => {
+      console.error(`Error al actualizar el estado de la tarea ${actaId}:`, error);
+      alert('Ocurrió un error al actualizar el estado.');
+    }
+  });
+}
+
 
 // Función para verificar si todas las tareas están en estado "SI"
 todasLasTareasFirmadas(): boolean {
@@ -643,6 +708,43 @@ downloadPDF(): void {
 
   // Guardar el PDF
   doc.save('Tareas_Grupo.pdf');
+}
+
+
+// Función para obtener el id del parámetro cuyo valor es 'Firmada' y el tipo de parámetro es 'Estado Acta'
+getParametroIdByTipoParametroAndValor(): number | undefined {
+  // Buscar el tipo de parámetro cuyo nombre coincida con 'Estado Acta'
+  const tipoParametro = this.tipoParametros.find(tipo => tipo.tipO_PARAMETRO === "Estado Acta");
+
+  // Si encontramos el tipo de parámetro, buscamos el parámetro correspondiente
+  if (tipoParametro) {
+    // Buscar el parámetro cuyo 'parametro' sea 'Firmada' y cuyo 'iD_TIPO_PARAMETRO' coincida con el id del tipo de parámetro encontrado
+    const parametro = this.parametros.find(param => param.parametro === "Firmada" && param.iD_TIPO_PARAMETRO === tipoParametro.id);
+
+    // Si encontramos el parámetro, devolver su id
+    return parametro ? parametro.id : undefined;
+  }
+
+  // Si no se encuentra el tipo de parámetro, devolver undefined
+  return undefined;
+}
+
+// Función para obtener el id del parámetro cuyo valor es 'Firmada' y el tipo de parámetro es 'Estado Acta'
+getParametroIdByTipoParametroAndValorRechazada(): number | undefined {
+  // Buscar el tipo de parámetro cuyo nombre coincida con 'Estado Acta'
+  const tipoParametro = this.tipoParametros.find(tipo => tipo.tipO_PARAMETRO === "Estado Acta");
+
+  // Si encontramos el tipo de parámetro, buscamos el parámetro correspondiente
+  if (tipoParametro) {
+    // Buscar el parámetro cuyo 'parametro' sea 'Firmada' y cuyo 'iD_TIPO_PARAMETRO' coincida con el id del tipo de parámetro encontrado
+    const parametro = this.parametros.find(param => param.parametro === "Rechazada" && param.iD_TIPO_PARAMETRO === tipoParametro.id);
+
+    // Si encontramos el parámetro, devolver su id
+    return parametro ? parametro.id : undefined;
+  }
+
+  // Si no se encuentra el tipo de parámetro, devolver undefined
+  return undefined;
 }
 
 

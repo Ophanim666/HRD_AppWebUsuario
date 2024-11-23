@@ -98,10 +98,10 @@
         </div>
   
         <div class="modal-footer">
-            <button mat-flat-button class="mat-flat-button firmar" *ngIf="todasLasTareasFirmadas()" (click)="firmarTareas()">
+            <button mat-flat-button class="mat-flat-button firmar" (click)="firmarActa()">
                 Firmar
             </button>
-            <button mat-flat-button class="mat-flat-button firmar" *ngIf="todasLasTareasRechazadas()" (click)="rechazarTareas()">
+            <button mat-flat-button class="mat-flat-button firmar" (click)="rechazarActa()">
             Rechazar
           </button>
           <button mat-flat-button class="mat-flat-button cancelar" (click)="closeModalActa()">
