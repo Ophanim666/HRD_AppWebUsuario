@@ -26,6 +26,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatPaginatorIntl } from '@angular/material/paginator';
+import { getSpanishPaginatorIntl } from './mat-paginator-es';
 
 // HTTP Client
 import { HttpClientModule } from '@angular/common/http';
@@ -56,6 +58,9 @@ import { HttpClientModule } from '@angular/common/http';
     MatDatepickerModule
   ],
   providers: [
+
+    { provide: MatPaginatorIntl, useValue: getSpanishPaginatorIntl() },
+
     provideAnimationsAsync(), //aqui se estan interceptando los tokens
     {
       provide: HTTP_INTERCEPTORS, // Proporciona el interceptor
