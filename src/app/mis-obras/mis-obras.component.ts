@@ -110,6 +110,8 @@ export class MisObrasComponent implements OnInit {
   showModalActa = false;
   searchText: string = '';
   pagedActas: any[] = [];
+  roles: Parametro[] = [];
+  grupos: any[] = [];
 
   // Variables para manejo de errores
   showErrorModal = false;
@@ -678,37 +680,25 @@ rechazarTareas(): void {
   });
 }
 
-downloadPDF(): void {
-  if (!this.tareasDelGrupo || this.tareasDelGrupo.length === 0) {
-    alert('No hay tareas para generar el reporte.');
-    return;
+getRolNombre(id: number): string {
+  // Confirmar que los datos están cargados
+  if (!this.roles || this.roles.length === 0) {
+    console.warn('La lista de roles está vacía.');
+    return `Rol desconocido (ID: ${id})`;
   }
 
-  // Crear un nuevo documento PDF
-  const doc = new jsPDF();
-  doc.setFontSize(18);
-  doc.text('Reporte de Tareas del Grupo', 14, 20);
+  // Buscar el rol
+  const rol = this.roles.find((rol) => rol.id === id);
 
-  // Crear tabla con las tareas
-  const tareasInfo = this.tareasDelGrupo.map(tarea => [
-    tarea.id,
-    tarea.nombre,
-    tarea.estado === 1 ? 'SI' : tarea.estado === 0 ? 'NO' : 'P'
-  ]);
+  // Validar el resultado
+  if (!rol) {
+    console.warn(`No se encontró un rol con el ID: ${id}`);
+    return `Rol desconocido (ID: ${id})`;
+  }
 
-  (doc as any).autoTable({
-    head: [['ID Tarea', 'Nombre Tarea', 'Estado']],
-    body: tareasInfo,
-    startY: 30,
-    theme: 'striped',
-    styles: { fontSize: 10 },
-    headStyles: { fillColor: [22, 160, 133], textColor: 255 },
-    bodyStyles: { valign: 'top', halign: 'left' },
-  });
-
-  // Guardar el PDF
-  doc.save('Tareas_Grupo.pdf');
+  return rol.parametro;
 }
+
 
 
 // Función para obtener el id del parámetro cuyo valor es 'Firmada' y el tipo de parámetro es 'Estado Acta'
@@ -748,4 +738,84 @@ getParametroIdByTipoParametroAndValorRechazada(): number | undefined {
 }
 
 
+
+
+  /*se implementa la funcion para la descarga de actas en PDF*/
+  downloadPDF(actaId: number): void {
+    // Filtrar las tareas asociadas al acta seleccionada
+    this.filtrarTareasPorActa(actaId);
+  
+    // Esperar a que las tareas estén listas
+    setTimeout(() => {
+      const acta = this.actas.find((a) => a.id === actaId);
+      if (!acta) {
+        alert('No se encontró el acta especificada.');
+        return;
+      }
+  
+      if (!this.tareasDelGrupo || this.tareasDelGrupo.length === 0) {
+        alert('No hay tareas asociadas al acta.');
+        return;
+      }
+  
+      // Crear el documento PDF
+      const doc = new jsPDF();
+      doc.setFontSize(18);
+      doc.text(`Reporte de Acta N° ${actaId}`, 14, 20);
+  
+      // Información del Acta
+      const actaInfo = [
+        ['Campo', 'Detalle'],
+        ['ID', acta.id || 'Sin ID'],
+        ['Obra', this.getObraNombre(acta.obrA_ID || 0)],
+        ['Proveedor', this.getProveedorNombre(acta.proveedoR_ID || 0)],
+        ['Especialidad', this.getEspecialidadNombre(acta.especialidaD_ID || 0)],
+        ['Administrador', this.getUsuarioNombre(acta.revisoR_ID || 0)],
+        ['Fecha de Creación', acta.fechA_APROBACION ? new Date(acta.fechA_APROBACION).toLocaleDateString() : 'Sin fecha'],
+        ['Observaciones', acta.observacion || 'Sin observaciones'],
+        ['Estado', this.getEstadoNombre(acta.estadO_ID || 0)],
+      ];
+  
+      (doc as any).autoTable({
+        head: [actaInfo[0]],
+        body: actaInfo.slice(1),
+        startY: 30,
+        theme: 'striped',
+        styles: { fontSize: 10, cellPadding: 3 },
+        headStyles: { fillColor: [22, 160, 133], textColor: 255 },
+        bodyStyles: { valign: 'top', halign: 'left' },
+        columnStyles: {
+          1: { cellWidth: 100 }, // Ajusta el ancho de la columna "Detalle"
+        },
+        didParseCell: (data: any) => {
+          if (data.row.raw && data.row.raw[0] === 'Observaciones') {
+            data.cell.styles.cellWidth = 'wrap'; // Envuelve texto largo en Observaciones
+          }
+        },
+      });
+  
+      // Información de las tareas asociadas
+      const tareasInfo = this.tareasDelGrupo.map((tarea) => [
+        tarea.id,
+        tarea.nombre,
+        tarea.estado === 1 ? 'SI' : tarea.estado === 0 ? 'NO' : 'P',
+      ]);
+  
+      doc.text('Tareas Asociadas:', 14, (doc as any).lastAutoTable.finalY + 10);
+  
+      (doc as any).autoTable({
+        head: [['ID Tarea', 'Nombre Tarea', 'Estado']],
+        body: tareasInfo,
+        startY: (doc as any).lastAutoTable.finalY + 20,
+        theme: 'striped',
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [22, 160, 133], textColor: 255 },
+        bodyStyles: { valign: 'top', halign: 'left' },
+      });
+  
+      // Guardar el PDF
+      doc.save(`Acta_${actaId}_Reporte.pdf`);
+    }, 1000);
+  }
+  
 }
