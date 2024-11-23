@@ -107,8 +107,12 @@
           <button mat-flat-button class="mat-flat-button cancelar" (click)="closeModalActa()">
             Cerrar
           </button>
-          <button mat-flat-button color="primary" (click)="downloadPDF()">
-            Descargar Reporte
+          <!-- Botón para descargar archivo -->
+        <div class="button-group-right">
+          <button mat-flat-button color="accent" class="mat-flat-button descargar" 
+          style="margin-right: 10px;" 
+          (click)="downloadPDF(currentActa.id || 0)">
+          <mat-icon>download</mat-icon>Descargar
           </button>
         </div>
         

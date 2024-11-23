@@ -110,17 +110,14 @@
       </div>
 
       <div class="modal-footer">
-        <button mat-flat-button class="mat-flat-button firmar" *ngIf="todasLasTareasFirmadas()" (click)="firmarTareas()">
+        <button mat-flat-button class="mat-flat-button firmar" (click)="firmarTareas()">
           Firmar
-      </button>
-      <button mat-flat-button class="mat-flat-button firmar" *ngIf="todasLasTareasRechazadas()" (click)="rechazarTareas()">
+        </button>
+        <button mat-flat-button class="mat-flat-button rechazar" (click)="rechazarTareas()">
           Rechazar
         </button>
         <button mat-flat-button class="mat-flat-button cancelar" (click)="closeModalActa()">
           Cerrar
-        </button>
-        <button mat-flat-button color="primary" (click)="downloadPDF()">
-          Descargar Reporte
         </button>
       </div>
       
