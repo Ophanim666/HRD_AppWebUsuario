@@ -98,10 +98,10 @@
         </div>
   
         <div class="modal-footer">
-            <button mat-flat-button class="mat-flat-button firmar" (click)="firmarActa()">
+            <button mat-flat-button class="mat-flat-button agregar" (click)="firmarActa()">
                 Firmar
             </button>
-            <button mat-flat-button class="mat-flat-button firmar" (click)="rechazarActa()">
+            <button mat-flat-button class="mat-flat-button eliminar" (click)="rechazarActa()">
             Rechazar
           </button>
           <button mat-flat-button class="mat-flat-button cancelar" (click)="closeModalActa()">
@@ -109,7 +109,7 @@
           </button>
           <!-- Botón para descargar archivo -->
         <div class="button-group-right">
-          <button mat-flat-button color="accent" class="mat-flat-button descargar" 
+          <button mat-flat-button color="accent" class="mat-flat-button editar" 
           style="margin-right: 10px;" 
           (click)="downloadPDF(currentActa.id || 0)">
           <mat-icon>download</mat-icon>Descargar

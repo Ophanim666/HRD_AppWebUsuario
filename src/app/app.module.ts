@@ -27,6 +27,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatPaginatorIntl } from '@angular/material/paginator';
+import { getSpanishPaginatorIntl } from './mat-paginator-es';
 
 
 // HTTP Client
@@ -61,6 +63,8 @@ import { MisObrasComponent } from './mis-obras/mis-obras.component';
     MatRadioModule
   ],
   providers: [
+    { provide: MatPaginatorIntl, useValue: getSpanishPaginatorIntl() },
+    
     provideAnimationsAsync(), //aqui se estan interceptando los tokens
     {
       provide: HTTP_INTERCEPTORS, // Proporciona el interceptor

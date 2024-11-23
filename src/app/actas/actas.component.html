@@ -105,7 +105,7 @@
         </div>
         <div class="upload-container">
           <label for="file-upload" class="upload-button">
-            Adjuntar Archivos
+            Adjuntar archivo
           </label>
           <input id="file-upload" type="file" multiple (change)="onFileSelected($event)" />
         </div>
@@ -123,7 +123,7 @@
             class="mat-flat-button subir" 
             (click)="uploadFiles()" 
             [disabled]="archivosSeleccionados.length === 0">
-            Subir Archivos
+            Subir archivo
           </button>
           <button 
             mat-flat-button 
@@ -136,10 +136,10 @@
       </div>
 
       <div class="modal-footer">
-        <button mat-flat-button class="mat-flat-button firmar" (click)="firmarGrupoTarea()">
+        <button mat-flat-button class="mat-flat-button agregar" (click)="firmarGrupoTarea()">
           Firmar
       </button>
-      <button mat-flat-button class="mat-flat-button firmar"  (click)="rechazarGrupoTarea()">
+      <button mat-flat-button class="mat-flat-button eliminar"  (click)="rechazarGrupoTarea()">
           Rechazar
         </button>
         <button mat-flat-button class="mat-flat-button cancelar" (click)="closeModalActa()">

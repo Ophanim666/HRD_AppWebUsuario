@@ -1,3 +1,11 @@
+/* Estilos para los encabezados de los modals */
+.modal-title {
+  font-size: 20px;
+  font-weight: 500;
+  margin: 5px;
+  text-align: center;
+}
+
 .upload-container {
     text-align: center;
     margin: 20px;
@@ -6,7 +14,7 @@
   .upload-button {
     display: inline-block;
     padding: 10px 20px;
-    background-color: #007bff; /* Color azul */
+    background-color: #808080;
     color: white;
     font-size: 16px;
     font-weight: bold;
@@ -18,7 +26,7 @@
   }
   
   .upload-button:hover {
-    background-color: #0056b3; /* Color azul más oscuro */
+    background-color: #676767; /* Color azul más oscuro */
   }
   
   #file-upload {

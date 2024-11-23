@@ -121,7 +121,6 @@ export class ActasComponent implements OnInit {
   searchText: string = '';
   pagedActas: any[] = [];
   roles: Parametro[] = [];
-  grupos: any[] = [];
   firmaGrupo: any[]=[];
 
   //adjuntar archivo
