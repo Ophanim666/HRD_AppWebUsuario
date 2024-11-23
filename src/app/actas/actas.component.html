@@ -80,40 +80,66 @@
                 <td>{{ tarea.nombre }}</td>
                 <td>
                   <!-- Radio Buttons con Clases Dinámicas y Evento Change -->
-                  <mat-radio-group [(ngModel)]="tarea.estado">
+                  <mat-radio-group [(ngModel)]="tarea.estado" (ngModelChange)="actualizarEstado(tarea)">
                     <mat-radio-button 
                       [value]="1" 
-                      [ngClass]="{ 'radio-seleccionado': tarea.estado === 1 }" 
-                      (change)="actualizarEstado(tarea)">
+                      [ngClass]="{ 'radio-seleccionado': tarea.estado === 1 }">
                       SI
                     </mat-radio-button>
                     <mat-radio-button 
                       [value]="0" 
-                      [ngClass]="{ 'radio-no-seleccionado': tarea.estado === 0 }" 
-                      (change)="actualizarEstado(tarea)">
+                      [ngClass]="{ 'radio-no-seleccionado': tarea.estado === 0 }">
                       NO
                     </mat-radio-button>
                     <mat-radio-button 
                       [value]="null" 
-                      [ngClass]="{ 'radio-pendiente': tarea.estado === null }" 
-                      (change)="actualizarEstado(tarea)">
+                      [ngClass]="{ 'radio-pendiente': tarea.estado === null }">
                       P
                     </mat-radio-button>
                   </mat-radio-group>
                 </td>
               </tr>
-              
-              
             </tbody>
           </table>
+          
+        </div>
+        <div class="upload-container">
+          <label for="file-upload" class="upload-button">
+            Adjuntar Archivos
+          </label>
+          <input id="file-upload" type="file" multiple (change)="onFileSelected($event)" />
+        </div>
+
+        <!-- nombre de los archivos -->
+        <div class="file-list" *ngIf="archivosSeleccionados.length > 0">
+          <p *ngFor="let archivo of archivosSeleccionados">
+            Archivo: {{ archivo.name }}
+          </p>
+        </div>
+
+        <div class="upload-container">
+          <button 
+            mat-flat-button 
+            class="mat-flat-button subir" 
+            (click)="uploadFiles()" 
+            [disabled]="archivosSeleccionados.length === 0">
+            Subir Archivos
+          </button>
+          <button 
+            mat-flat-button 
+            class="mat-flat-button cancelar" 
+            (click)="cancelUpload()" 
+            [disabled]="archivosSeleccionados.length === 0">
+            Cancelar
+          </button>
         </div>
       </div>
 
       <div class="modal-footer">
-        <button mat-flat-button class="mat-flat-button firmar" (click)="firmarTareas()">
+        <button mat-flat-button class="mat-flat-button firmar" (click)="firmarGrupoTarea()">
           Firmar
-        </button>
-        <button mat-flat-button class="mat-flat-button rechazar" (click)="rechazarTareas()">
+      </button>
+      <button mat-flat-button class="mat-flat-button firmar"  (click)="rechazarGrupoTarea()">
           Rechazar
         </button>
         <button mat-flat-button class="mat-flat-button cancelar" (click)="closeModalActa()">
