@@ -122,6 +122,11 @@ export class ActasComponent implements OnInit {
   pagedActas: any[] = [];
   roles: Parametro[] = [];
   firmaGrupo: any[]=[];
+  showConfirmationModal = false;  // Controla si el modal de confirmación está visible
+  confirmationMessage = '';  // Mensaje a mostrar en el modal
+  confirmationAction: (() => void) | null = null;  // Acción a ejecutar al confirmar
+  showSuccessModal = false;  // Controla si el modal está visible
+  successMessage = '';  // Mensaje a mostrar en el modal
 
   //adjuntar archivo
   archivos: Archivo[] = [];
@@ -656,49 +661,87 @@ actualizarEstado(tarea: any): void {
   });
 }
 
-firmarGrupoTarea(): void {
-  console.log("acta", this.grupoId)
-  const payload = {
-    //grupoTareaId: tarea.grupoTareaId, // Ajusta estos campos según tu modelo
-    //tareaId: tarea.id,
-    estado: 1,
-  };
-
-  //const grupoTarea = this.userActas.find((item: any) => item.acta === acta.id)?.grupo;
-  const grupoTarea = this.grupoId;
-  console.log("id grupo", grupoTarea)
-  this.http.put(`${this.apiUrlGrupoTarea}/ActualizarEstadoFirma/${grupoTarea}`, payload).subscribe({
-    next: response => {
-      console.log(`Estado actualizado correctamente para la tarea ${grupoTarea}:`, response);
-    },
-    error: error => {
-      console.error(`Error al actualizar el estado de la tarea ${grupoTarea}:`, error);
-      alert('Ocurrió un error al actualizar el estado.');
-    }
-  });
+// Abrir el modal de confirmación
+openConfirmationModal(message: string, action: () => void): void {
+  this.confirmationMessage = message;
+  this.confirmationAction = action;
+  this.showConfirmationModal = true;
 }
 
-rechazarGrupoTarea(): void {
-  console.log("acta", this.grupoId)
-  const payload = {
-    //grupoTareaId: tarea.grupoTareaId, // Ajusta estos campos según tu modelo
-    //tareaId: tarea.id,
-    estado: 0,
-  };
-
-  //const grupoTarea = this.userActas.find((item: any) => item.acta === acta.id)?.grupo;
-  const grupoTarea = this.grupoId;
-  console.log("id grupo", grupoTarea)
-  this.http.put(`${this.apiUrlGrupoTarea}/ActualizarEstadoFirma/${grupoTarea}`, payload).subscribe({
-    next: response => {
-      console.log(`Estado actualizado correctamente para la tarea ${grupoTarea}:`, response);
-    },
-    error: error => {
-      console.error(`Error al actualizar el estado de la tarea ${grupoTarea}:`, error);
-      alert('Ocurrió un error al actualizar el estado.');
-    }
-  });
+// Cerrar el modal de confirmación
+closeConfirmationModal(): void {
+  this.showConfirmationModal = false;
+  this.confirmationMessage = '';
+  this.confirmationAction = null;
 }
+
+// Ejecutar la acción confirmada
+executeConfirmationAction(): void {
+  if (this.confirmationAction) {
+    this.confirmationAction();
+  }
+  this.closeConfirmationModal();
+}
+
+  // Mostrar el modal de éxito
+  showSuccess(message: string): void {
+    this.successMessage = message;
+    this.showSuccessModal = true;
+
+    // Cerrar el modal automáticamente después de 3 segundos
+    setTimeout(() => {
+      this.closeSuccessModal();
+    }, 3000);
+  }
+
+  // Cerrar el modal de éxito
+  closeSuccessModal(): void {
+    this.showSuccessModal = false;
+    this.successMessage = '';
+  }
+
+  // Modificar las funciones de firmar y rechazar grupo de tareas para mostrar el modal
+  firmarGrupoTarea(): void {
+    this.openConfirmationModal(
+      '¿Está seguro de que desea firmar este grupo de tareas?',
+      () => {
+        const payload = { estado: 1 };
+        const grupoTarea = this.grupoId;
+
+        this.http.put(`${this.apiUrlGrupoTarea}/ActualizarEstadoFirma/${grupoTarea}`, payload).subscribe({
+          next: response => {
+            console.log(`Estado actualizado correctamente para el grupo ${grupoTarea}:`, response);
+            this.showSuccess('Estado actualizado correctamente.');
+          },
+          error: error => {
+            console.error(`Error al actualizar el estado del grupo ${grupoTarea}:`, error);
+            alert('Ocurrió un error al actualizar el estado.');
+          }
+        });
+      }
+    );
+  }
+
+  rechazarGrupoTarea(): void {
+    this.openConfirmationModal(
+      '¿Está seguro de que desea rechazar este grupo de tareas?',
+      () => {
+        const payload = { estado: 0 };
+        const grupoTarea = this.grupoId;
+
+        this.http.put(`${this.apiUrlGrupoTarea}/ActualizarEstadoFirma/${grupoTarea}`, payload).subscribe({
+          next: response => {
+            console.log(`Estado actualizado correctamente para el grupo ${grupoTarea}:`, response);
+            this.showSuccess('Estado actualizado correctamente.');
+          },
+          error: error => {
+            console.error(`Error al actualizar el estado del grupo ${grupoTarea}:`, error);
+            alert('Ocurrió un error al actualizar el estado.');
+          }
+        });
+      }
+    );
+  }
 
 onFileSelected(event: Event): void {
   const input = event.target as HTMLInputElement;

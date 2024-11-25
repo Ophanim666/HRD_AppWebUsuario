@@ -165,3 +165,42 @@
     </div>
   </div>
 </div>
+
+<div *ngIf="showConfirmationModal" class="modal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Header -->
+      <div class="modal-header">
+        <h2 class="modal-title">Confirmación</h2>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <p>{{ confirmationMessage }}</p>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button mat-flat-button class="mat-flat-button cancelar" (click)="closeConfirmationModal()">No</button>
+        <button mat-flat-button class="mat-flat-button confirmarEliminar" (click)="executeConfirmationAction()">Sí</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de éxito -->
+<div *ngIf="showSuccessModal" class="modal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Header -->
+      <div class="modal-header">
+        <h2 class="modal-title">Éxito</h2>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <p>{{ successMessage }}</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -112,6 +112,11 @@ export class MisObrasComponent implements OnInit {
   pagedActas: any[] = [];
   roles: Parametro[] = [];
   grupos: any[] = [];
+  showConfirmationModal = false;  // Controla si el modal de confirmación está visible
+  confirmationMessage = '';  // Mensaje a mostrar en el modal
+  confirmationAction: (() => void) | null = null;  // Acción a ejecutar al confirmar
+  showSuccessModal = false;  // Controla si el modal está visible
+  successMessage = '';  // Mensaje a mostrar en el modal
 
   // Variables para manejo de errores
   showErrorModal = false;
@@ -603,6 +608,44 @@ actualizarEstado(tarea: any): void {
   });
 }
 
+// Abrir el modal de confirmación
+openConfirmationModal(message: string, action: () => void): void {
+  this.confirmationMessage = message;
+  this.confirmationAction = action;
+  this.showConfirmationModal = true;
+}
+
+// Cerrar el modal de confirmación
+closeConfirmationModal(): void {
+  this.showConfirmationModal = false;
+  this.confirmationMessage = '';
+  this.confirmationAction = null;
+}
+
+// Ejecutar la acción confirmada
+executeConfirmationAction(): void {
+  if (this.confirmationAction) {
+    this.confirmationAction();
+  }
+  this.closeConfirmationModal();
+}
+
+  // Mostrar el modal de éxito
+  showSuccess(message: string): void {
+    this.successMessage = message;
+    this.showSuccessModal = true;
+
+    // Cerrar el modal automáticamente después de 3 segundos
+    setTimeout(() => {
+      this.closeSuccessModal();
+    }, 3000);
+  }
+
+  // Cerrar el modal de éxito
+  closeSuccessModal(): void {
+    this.showSuccessModal = false;
+    this.successMessage = '';
+  }
 
 
 // firmarTareas(): void {
@@ -612,52 +655,75 @@ actualizarEstado(tarea: any): void {
 //   });
 // }
 firmarActa(): void {
-  //console.log("acta", this.grupoId)
+  // Mostrar el modal de confirmación antes de proceder
+  this.openConfirmationModal(
+    '¿Está seguro de que desea firmar esta acta?', // Mensaje para el modal
+    () => {
+      // Acción a ejecutar si el usuario confirma
+      const payload = {
+        idEstado: this.parametroFirmada, // Estado "firmada" obtenido previamente
+      };
+      const actaId = this.actaId; // ID de la acta actual
 
-  
+      console.log("Estado del firmar:", payload); // Log para depuración
+      console.log("Id de acta:", actaId); // Log para depuración
 
-
-  const payload = {
-    //grupoTareaId: tarea.grupoTareaId, // Ajusta estos campos según tu modelo
-    //tareaId: tarea.id,
-    idEstado: this.parametroFirmada,
-  };
-  console.log("estado del firmar", payload)
-  //const grupoTarea = this.userActas.find((item: any) => item.acta === acta.id)?.grupo;
-  const actaId = this.actaId;
-  console.log("id grupo", actaId)
-  this.http.put(`${this.apiUrlActas}/ActualizarActaFirma/${actaId}`, payload).subscribe({
-    next: response => {
-      console.log(`Estado actualizado correctamente para la tarea ${actaId}:`, response);
-    },
-    error: error => {
-      console.error(`Error al actualizar el estado de la tarea ${actaId}:`, error);
-      alert('Ocurrió un error al actualizar el estado.');
+      // Llamada a la API para actualizar el estado del acta
+      this.http.put(`${this.apiUrlActas}/ActualizarActaFirma/${actaId}`, payload).subscribe({
+        next: response => {
+          // Si la llamada es exitosa
+          console.log(`Estado actualizado correctamente para la acta ${actaId}:`, response);
+          const updatedActa = this.actas.find(acta => acta.id === actaId);
+          if (updatedActa) {
+          updatedActa.estadO_ID = this.parametroRechazada;
+        }
+          // Mostrar el modal de éxito con un mensaje adecuado
+          this.showSuccess('Acta firmada correctamente.');
+        },
+        error: error => {
+          // Si ocurre un error, mostrar un mensaje de error en la consola y al usuario
+          console.error(`Error al actualizar el estado de la acta ${actaId}:`, error);
+          alert('Ocurrió un error al actualizar el estado de la acta.');
+        }
+      });
     }
-  });
+  );
 }
 
 rechazarActa(): void {
-  //console.log("acta", this.grupoId)
+  // Mostrar el modal de confirmación antes de proceder
+  this.openConfirmationModal(
+    '¿Está seguro de que desea rechazar esta acta?', // Mensaje para el modal
+    () => {
+      // Acción a ejecutar si el usuario confirma
+      const payload = {
+        idEstado: this.parametroRechazada, // Estado "rechazada" obtenido previamente
+      };
+      const actaId = this.actaId; // ID de la acta actual
 
-  const payload = {
-    //grupoTareaId: tarea.grupoTareaId, // Ajusta estos campos según tu modelo
-    //tareaId: tarea.id,
-    idEstado: this.parametroRechazada,
-  };
-  console.log("estado del firmar", payload)
-  //const grupoTarea = this.userActas.find((item: any) => item.acta === acta.id)?.grupo;
-  const actaId = this.actaId;
-  console.log("id grupo", actaId)
-  this.http.put(`${this.apiUrlActas}/ActualizarActaFirma/${actaId}`, payload).subscribe({
-    next: response => {
-      console.log(`Estado actualizado correctamente para la tarea ${actaId}:`, response);
-    },
-    error: error => {
-      console.error(`Error al actualizar el estado de la tarea ${actaId}:`, error);
-      alert('Ocurrió un error al actualizar el estado.');
+      console.log("Estado del rechazar:", payload); // Log para depuración
+      console.log("Id de acta:", actaId); // Log para depuración
+
+      // Llamada a la API para actualizar el estado del acta
+      this.http.put(`${this.apiUrlActas}/ActualizarActaFirma/${actaId}`, payload).subscribe({
+        next: response => {
+          // Si la llamada es exitosa
+          console.log(`Estado actualizado correctamente para la acta ${actaId}:`, response);
+          const updatedActa = this.actas.find(acta => acta.id === actaId);
+          if (updatedActa) {
+          updatedActa.estadO_ID = this.parametroRechazada;
+        }
+          // Mostrar el modal de éxito con un mensaje adecuado
+          this.showSuccess('Acta rechazada correctamente.');
+        },
+        error: error => {
+          // Si ocurre un error, mostrar un mensaje de error en la consola y al usuario
+          console.error(`Error al actualizar el estado de la acta ${actaId}:`, error);
+          alert('Ocurrió un error al actualizar el estado de la acta.');
+        }
+      });
     }
-  });
+  );
 }
 
 
