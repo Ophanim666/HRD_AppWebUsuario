@@ -152,6 +152,7 @@ export class MisObrasComponent implements OnInit {
     this.loadObras();
     this.loadTareas();
     this.loadGruposTareas();
+    this.loadParametrosRoles();
 
     // Llamada a la función para obtener el id del parámetro
     const parametroId = this.getParametroIdByTipoParametroAndValor();
@@ -173,7 +174,7 @@ export class MisObrasComponent implements OnInit {
 
   // Nueva función para cargar las actas del usuario
   loadUserActas(): void {
-    this.http.get<any>('https://localhost:7125/api/Acta/revisor-actas').subscribe({
+    this.http.get<any>(`${this.apiUrlActas}/revisor-actas`).subscribe({
       next: response => {
         if (response.body?.response) {
           this.userActas = response.body.response;
@@ -265,24 +266,56 @@ export class MisObrasComponent implements OnInit {
     });
   }
 
-  // Cargar TODOS los grupos de tareas
-  loadGruposTareas(): void {
-    this.http.get<any>(`${this.apiUrlGrupoTarea}/Listado`).subscribe({
-      next: response => {
-        if (response.estado?.ack) {
-          this.gruposTareas = response.body.response;
-          console.log('Todos los grupos de tareas cargados:', this.gruposTareas);
+  loadParametrosRoles(): void {
+  this.http.get<any>(`${this.apiUrl}/Listar`).subscribe({
+    next: response => {
+      if (response.estado.ack) {
+        // Encuentra el tipo "Roles" en los tipos de parámetros
+        const tipoRoles = this.tipoParametros.find(
+          tipo => tipo.tipO_PARAMETRO === "Roles"
+        );
+
+        if (tipoRoles) {
+          // Filtra los parámetros que pertenecen al tipo "Roles"
+          this.roles = response.body.response.filter(
+            (parametro: Parametro) => parametro.iD_TIPO_PARAMETRO === tipoRoles.id
+          );
+          console.log('Roles cargados:', this.roles);
         } else {
-          this.showError(`Error al cargar los grupos de tareas: ${response.estado?.errDes}`, true);
+          console.warn('No se encontró el tipo de parámetro "Roles".');
         }
+      } else {
+        console.error('Error al cargar los roles:', response.estado.errDes);
+      }
+    },
+    error: error => {
+      console.error('Error al cargar los roles:', error);
+    }
+  });
+}
+
+
+  // Cargar TODOS los grupos de tareas
+  loadGruposTareas(actaId?: number): void {
+    this.http.get(`${this.apiUrlGrupoTarea}/Listado`).subscribe({
+      next: (response: any) => {
+        // Filtra los grupos de tareas por idActa si se pasa el actaId
+          if (actaId) {
+            this.grupos = response.body.response.filter((grupo: any) => grupo.idActa === actaId);
+          } else {
+            this.grupos = response.body.response || [];
+          }
+        
+          // console.log('currentGrupo:', this.grupos);
       },
       error: error => {
-        console.error('Error al cargar los grupos de tareas:', error);
-        this.showError('Error en la solicitud al cargar los grupos de tareas.', true);
+        console.error('Error al cargar grupos de tareas:', error);
+        this.showError('Error al cargar los grupos de tareas.', true);
       }
     });
   }
 
+  
   //Función para cargar tipos de parámetros desde la API
   loadTipoParametros(): void {
     this.http.get<any>(`${this.apiUrlTipoParametro}/LstTipoParametros`).subscribe({
@@ -443,24 +476,74 @@ export class MisObrasComponent implements OnInit {
     this.paginator.length = filtered.length;
   }
 
-  // Modificar el método openModalActa para usar el nuevo filtrado
-  openModalActa(acta?: Acta): void {
-    this.currentActa = acta ? { ...acta } : this.getEmptyActa();
+    getNombreTarea(tareaId: number): string {
+    const tarea = this.tareas.find(t => t.id === tareaId);
+    return tarea ? tarea.nombre : 'Tarea desconocida';
+  }
+  
+  getEstadoTexto(tareaId: number): string {
+    const tarea = this.tareas.find(t => t.id === tareaId);
+    if (tarea) {
+      return tarea.estado === 1 ? 'SI' : tarea.estado === 0 ? 'NO' : 'PENDIENTE';
+    }
+    return 'N/A';
+  }
+  
+  getEstadoClase(tareaId: number): any {
+    const tarea = this.tareas.find(t => t.id === tareaId);
+    if (tarea) {
+      return {
+        'estado-si': tarea.estado === 1,
+        'estado-no': tarea.estado === 0,
+        'estado-pendiente': tarea.estado === null,
+      };
+    }
+    return {};
+  }
+  
+
+    // Modificar el método openModalActa para usar el nuevo filtrado
+    openModalActa(acta?: Acta): void {
+      this.currentActa = acta ? { ...acta } : this.getEmptyActa();
     
-
-    this.actaId=this.currentActa.id;
-    this.parametroFirmada=this.getParametroIdByTipoParametroAndValor();
-    this.parametroRechazada =this.getParametroIdByTipoParametroAndValorRechazada();
-
-    console.log("Id parametro: ", this.parametroFirmada)
-
-    if (acta && acta.id) {
-      this.filtrarTareasPorActa(acta.id);
+      if (acta && acta.id) {
+        this.actaId = acta.id;
+    
+        // Mantener lógica de firmas
+        this.parametroFirmada = this.getParametroIdByTipoParametroAndValor();
+        this.parametroRechazada = this.getParametroIdByTipoParametroAndValorRechazada();
+    
+        console.log("Id parámetro firmado: ", this.parametroFirmada);
+        console.log("Id parámetro rechazado: ", this.parametroRechazada);
+    
+        // Cargar los grupos asociados al acta
+        this.http.get<any>(`${this.apiUrlGrupoTarea}/Listado`).subscribe({
+          next: response => {
+            if (response.body?.response) {
+              // Filtrar y mapear los grupos para agregar el administrador
+              this.grupos = response.body.response
+                .filter((grupo: any) => grupo.idActa === acta.id)
+                .map((grupo: any) => ({
+                  ...grupo,
+                  administradorNombre: this.getUsuarioNombre(grupo.idEncargado || acta.revisoR_ID) // Priorizar idEncargado, si no usar revisoR_ID
+                }));
+              console.log('Grupos procesados:', this.grupos);
+            } else {
+              console.warn('No se encontraron grupos para esta acta.');
+              this.grupos = [];
+            }
+          },
+          error: error => {
+            console.error('Error al cargar los grupos de tareas:', error);
+            this.showError('Error al cargar los grupos de tareas.', true);
+          }
+        });
+      }
+    
+      this.showModalActa = true;
+      document.body.classList.add('modal-open');
     }
     
-    this.showModalActa = true;
-    document.body.classList.add('modal-open');
-  }
 
   // Función para cerrar el modal
   closeModalActa(): void {
@@ -592,7 +675,7 @@ export class MisObrasComponent implements OnInit {
 
 actualizarEstado(tarea: any): void {
   const payload = {
-    grupoTareaId: tarea.grupoTareaId, // Ajusta estos campos según tu modelo
+    grupoTareaId: tarea.grupoTareaId, 
     tareaId: tarea.id,
     estado: tarea.estado,
   };
@@ -673,10 +756,16 @@ firmarActa(): void {
         next: response => {
           // Si la llamada es exitosa
           console.log(`Estado actualizado correctamente para la acta ${actaId}:`, response);
+
+          // Encuentra la acta actual en el array `actas` y actualiza su estado localmente
           const updatedActa = this.actas.find(acta => acta.id === actaId);
           if (updatedActa) {
-          updatedActa.estadO_ID = this.parametroRechazada;
-        }
+            updatedActa.estadO_ID = this.parametroFirmada; // Actualizar el estado a "Firmada"
+          }
+
+          // Actualizar la tabla sin recargar la página
+          this.updatePageActa();
+
           // Mostrar el modal de éxito con un mensaje adecuado
           this.showSuccess('Acta firmada correctamente.');
         },
@@ -709,10 +798,16 @@ rechazarActa(): void {
         next: response => {
           // Si la llamada es exitosa
           console.log(`Estado actualizado correctamente para la acta ${actaId}:`, response);
+
+          // Encuentra la acta actual en el array `actas` y actualiza su estado localmente
           const updatedActa = this.actas.find(acta => acta.id === actaId);
           if (updatedActa) {
-          updatedActa.estadO_ID = this.parametroRechazada;
-        }
+            updatedActa.estadO_ID = this.parametroRechazada; // Actualizar el estado a "Rechazada"
+          }
+
+          // Actualizar la tabla sin recargar la página
+          this.updatePageActa();
+
           // Mostrar el modal de éxito con un mensaje adecuado
           this.showSuccess('Acta rechazada correctamente.');
         },
@@ -725,6 +820,7 @@ rechazarActa(): void {
     }
   );
 }
+
 
 
 // Función para verificar si todas las tareas están en estado "SI"
@@ -764,6 +860,7 @@ getRolNombre(id: number): string {
 
   return rol.parametro;
 }
+
 
 
 
@@ -808,80 +905,112 @@ getParametroIdByTipoParametroAndValorRechazada(): number | undefined {
 
   /*se implementa la funcion para la descarga de actas en PDF*/
   downloadPDF(actaId: number): void {
-    // Filtrar las tareas asociadas al acta seleccionada
-    this.filtrarTareasPorActa(actaId);
+    // Encuentra la acta seleccionada
+    const acta = this.actas.find((a) => a.id === actaId);
+    if (!acta) {
+      alert('No se encontró el acta especificada.');
+      return;
+    }
   
-    // Esperar a que las tareas estén listas
-    setTimeout(() => {
-      const acta = this.actas.find((a) => a.id === actaId);
-      if (!acta) {
-        alert('No se encontró el acta especificada.');
-        return;
+    // Cargar los grupos asociados al acta y agregar el nombre del administrador
+    this.http.get<any>(`${this.apiUrlGrupoTarea}/Listado`).subscribe({
+      next: response => {
+        if (response.body?.response) {
+          const grupos = response.body.response
+            .filter((grupo: any) => grupo.idActa === actaId)
+            .map((grupo: any) => ({
+              ...grupo,
+              administradorNombre: this.getUsuarioNombre(acta.revisoR_ID || 0), // Agrega el administrador
+            }));
+  
+          // Generar el PDF
+          this.generatePDF(acta, grupos);
+        } else {
+          alert('No hay grupos de tareas asociados al acta.');
+        }
+      },
+      error: error => {
+        console.error('Error al cargar los grupos de tareas:', error);
+        this.showError('Error al cargar los grupos de tareas.', true);
       }
+    });
+  }
   
-      if (!this.tareasDelGrupo || this.tareasDelGrupo.length === 0) {
-        alert('No hay tareas asociadas al acta.');
-        return;
-      }
+  // Nueva función para generar el PDF con los datos ya cargados
+  private generatePDF(acta: Acta, grupos: any[]): void {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text(`Reporte de Acta N° ${acta.id}`, 14, 20);
   
-      // Crear el documento PDF
-      const doc = new jsPDF();
-      doc.setFontSize(18);
-      doc.text(`Reporte de Acta N° ${actaId}`, 14, 20);
+    // Información del Acta
+    const actaInfo = [
+      ['Campo', 'Detalle'],
+      ['ID', acta.id || 'Sin ID'],
+      ['Obra', this.getObraNombre(acta.obrA_ID || 0)],
+      ['Proveedor', this.getProveedorNombre(acta.proveedoR_ID || 0)],
+      ['Especialidad', this.getEspecialidadNombre(acta.especialidaD_ID || 0)],
+      ['Administrador', this.getUsuarioNombre(acta.revisoR_ID || 0)],
+      ['Fecha de Creación', acta.fechA_APROBACION ? new Date(acta.fechA_APROBACION).toLocaleDateString() : 'Sin fecha'],
+      ['Observaciones', acta.observacion || 'Sin observaciones'],
+      ['Estado', this.getEstadoNombre(acta.estadO_ID || 0)],
+    ];
   
-      // Información del Acta
-      const actaInfo = [
-        ['Campo', 'Detalle'],
-        ['ID', acta.id || 'Sin ID'],
-        ['Obra', this.getObraNombre(acta.obrA_ID || 0)],
-        ['Proveedor', this.getProveedorNombre(acta.proveedoR_ID || 0)],
-        ['Especialidad', this.getEspecialidadNombre(acta.especialidaD_ID || 0)],
-        ['Administrador', this.getUsuarioNombre(acta.revisoR_ID || 0)],
-        ['Fecha de Creación', acta.fechA_APROBACION ? new Date(acta.fechA_APROBACION).toLocaleDateString() : 'Sin fecha'],
-        ['Observaciones', acta.observacion || 'Sin observaciones'],
-        ['Estado', this.getEstadoNombre(acta.estadO_ID || 0)],
+    (doc as any).autoTable({
+      head: [actaInfo[0]],
+      body: actaInfo.slice(1),
+      startY: 30,
+      theme: 'striped',
+      styles: { fontSize: 10, cellPadding: 3 },
+      headStyles: { fillColor: [22, 160, 133], textColor: 255 },
+      bodyStyles: { valign: 'top', halign: 'left' },
+      columnStyles: {
+        1: { cellWidth: 100 }, // Ajusta el ancho de la columna "Detalle"
+      },
+    });
+  
+    // Información de los grupos de tareas
+    grupos.forEach((grupo, index) => {
+      doc.setFontSize(14);
+      doc.text(`Grupo ${index + 1} - Administrador: ${grupo.administradorNombre}`, 14, (doc as any).lastAutoTable.finalY + 10);
+  
+      const grupoInfo = [
+        ['Rol', this.getRolNombre(grupo.idRol)],
+        ['Encargado', this.getUsuarioNombre(grupo.idEncargado)],
       ];
   
       (doc as any).autoTable({
-        head: [actaInfo[0]],
-        body: actaInfo.slice(1),
-        startY: 30,
-        theme: 'striped',
-        styles: { fontSize: 10, cellPadding: 3 },
-        headStyles: { fillColor: [22, 160, 133], textColor: 255 },
-        bodyStyles: { valign: 'top', halign: 'left' },
-        columnStyles: {
-          1: { cellWidth: 100 }, // Ajusta el ancho de la columna "Detalle"
-        },
-        didParseCell: (data: any) => {
-          if (data.row.raw && data.row.raw[0] === 'Observaciones') {
-            data.cell.styles.cellWidth = 'wrap'; // Envuelve texto largo en Observaciones
-          }
-        },
-      });
-  
-      // Información de las tareas asociadas
-      const tareasInfo = this.tareasDelGrupo.map((tarea) => [
-        tarea.id,
-        tarea.nombre,
-        tarea.estado === 1 ? 'SI' : tarea.estado === 0 ? 'NO' : 'P',
-      ]);
-  
-      doc.text('Tareas Asociadas:', 14, (doc as any).lastAutoTable.finalY + 10);
-  
-      (doc as any).autoTable({
-        head: [['ID Tarea', 'Nombre Tarea', 'Estado']],
-        body: tareasInfo,
-        startY: (doc as any).lastAutoTable.finalY + 20,
+        head: [['Campo', 'Detalle']],
+        body: grupoInfo,
+        startY: (doc as any).lastAutoTable.finalY + 15,
         theme: 'striped',
         styles: { fontSize: 10 },
         headStyles: { fillColor: [22, 160, 133], textColor: 255 },
-        bodyStyles: { valign: 'top', halign: 'left' },
       });
   
-      // Guardar el PDF
-      doc.save(`Acta_${actaId}_Reporte.pdf`);
-    }, 1000);
+      // Agregar las tareas asociadas al grupo
+      const tareasInfo = (grupo.idTarea || []).map((tareaId: number) => {
+        const tarea = this.tareas.find((t) => t.id === tareaId);
+        return tarea
+          ? [tarea.id, tarea.nombre, tarea.estado === 1 ? 'SI' : tarea.estado === 0 ? 'NO' : 'P']
+          : [`ID ${tareaId}`, 'Tarea desconocida', 'N/A'];
+      });
+  
+      if (tareasInfo.length > 0) {
+        doc.text('Tareas Asociadas:', 14, (doc as any).lastAutoTable.finalY + 15);
+        (doc as any).autoTable({
+          head: [['ID Tarea', 'Nombre Tarea', 'Estado']],
+          body: tareasInfo,
+          startY: (doc as any).lastAutoTable.finalY + 20,
+          theme: 'striped',
+          styles: { fontSize: 10 },
+          headStyles: { fillColor: [22, 160, 133], textColor: 255 },
+        });
+      }
+    });
+  
+    // Guardar el PDF
+    doc.save(`Acta_${acta.id}_Grupos_Tareas.pdf`);
   }
+  
   
 }

@@ -64,38 +64,35 @@
         </div>
   
         <div class="modal-body">
-          <!-- Tabla de tareas -->
           <div class="tareas-container">
-            <table class="table-elegant">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Tarea</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let tarea of tareasDelGrupo">
-                    <td>{{ tarea.id }}</td>
-                    <td>{{ tarea.nombre }}</td>
+            <div *ngFor="let grupo of grupos; let i = index">
+              <!-- Título del grupo basado en el índice -->
+              <h6 class="group-title">
+                Encargado: {{ grupo.administradorNombre || 'Desconocido' }}
+              </h6>
+              <table class="table-elegant-tareas">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Tar6a</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let tareaId of grupo.idTarea">
+                    <td>{{ tareaId }}</td>
+                    <td>{{ getNombreTarea(tareaId) }}</td>
                     <td>
-                      <!-- Mostrar el estado como texto -->
-                      <span 
-                        [ngClass]="{
-                          'estado-si': tarea.estado === 1,
-                          'estado-no': tarea.estado === 0,
-                          'estado-pendiente': tarea.estado === null
-                        }">
-                        {{ tarea.estado === 1 ? 'SI' : tarea.estado === 0 ? 'NO' : 'PENDIENTE' }}
+                      <span [ngClass]="getEstadoClase(tareaId)">
+                        {{ getEstadoTexto(tareaId) }}
                       </span>
                     </td>
                   </tr>
-                
-                
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+          
   
         <div class="modal-footer">
             <button mat-flat-button class="mat-flat-button agregar" (click)="firmarActa()">

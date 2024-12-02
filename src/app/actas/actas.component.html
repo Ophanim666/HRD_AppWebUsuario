@@ -66,7 +66,7 @@
       <div class="modal-body">
         <!-- Tabla de tareas -->
         <div class="tareas-container">
-          <table class="table-elegant">
+          <table class="table-elegant-tareas">
             <thead>
               <tr>
                 <th>ID</th>
@@ -101,14 +101,69 @@
               </tr>
             </tbody>
           </table>
-          
         </div>
         <div class="upload-container">
           <label for="file-upload" class="upload-button">
             Adjuntar archivo
           </label>
           <input id="file-upload" type="file" multiple (change)="onFileSelected($event)" />
+                <button  mat-flat-button class="mat-flat-button archivos" (click)="openFileModal()">
+          Ver Archivos
+        </button>
+  </div>
+
+
+  <div *ngIf="showFileModal" class="modal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Archivos del Grupo de Tareas</h3>
+          <button mat-icon-button (click)="closeFileModal()" class="close-button">
+            <mat-icon>close</mat-icon>
+          </button>
         </div>
+        <div class="modal-body">
+          <table class="table-elegant-tareas">
+            <thead>
+              <tr>
+                <th>Nombre del Archivo</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let archivo of archivosPorGrupoPaginados">
+                <td>
+                  <a href="#" (click)="downloadFile(archivo, $event)">{{ archivo.nombreArchivo || 'Archivo sin nombre' }}</a>
+                </td>
+                <td>
+                  <button mat-icon-button (click)="deleteFile(archivo.id)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <!-- Sección de paginación, movida fuera del tbody -->
+          <div class="pagination-container">
+            <button 
+              [disabled]="paginaActualArchivos === 1" 
+              (click)="cambiarPaginaArchivos(paginaActualArchivos - 1)">
+              Anterior
+            </button>
+            <span>Página {{ paginaActualArchivos }} de {{ obtenerTotalPaginasArchivos() }}</span>
+            <button 
+              [disabled]="paginaActualArchivos === obtenerTotalPaginasArchivos()" 
+              (click)="cambiarPaginaArchivos(paginaActualArchivos + 1)">
+              Siguiente
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+
 
         <!-- nombre de los archivos -->
         <div class="file-list" *ngIf="archivosSeleccionados.length > 0">

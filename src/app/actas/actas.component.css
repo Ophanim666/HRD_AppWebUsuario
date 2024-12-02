@@ -17,12 +17,12 @@
     background-color: #808080;
     color: white;
     font-size: 16px;
-    font-weight: bold;
     border: none;
-    border-radius: 5px;
+    border-radius: 70px;
     cursor: pointer;
     transition: background-color 0.3s ease;
     text-decoration: none;
+    margin-right: 1em; /* Añade espacio a la derecha del label */
   }
   
   .upload-button:hover {
@@ -32,3 +32,70 @@
   #file-upload {
     display: none; /* Ocultamos el input */
   }
+
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px; /* Espaciado entre la tabla y la paginación */
+  margin-bottom: 10px;
+}
+
+.pagination-container button {
+  margin: 0 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.pagination-container span {
+  margin: 0 10px;
+}
+
+.upload-container button {
+  margin-right: 1em; /* Espacio a la derecha de cada botón */
+}
+
+.upload-container button:last-child {
+  margin-right: 0; /* Elimina el margen en el último botón */
+}
+
+/* Aplica los estilos base de `table-elegant` a ambas clases */
+.table-elegant, .table-elegant-tareas {
+  width: 100%; /* Ancho completo */
+  border-collapse: separate; /* Elimina el espacio entre celdas */
+  border-spacing: 0; /* Sin espaciado extra */
+  border: 1px solid #d1d1d1; /* Borde gris claro */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra suave */
+  background-color: white; /* Fondo blanco */
+  margin-top: 20px; /* Espaciado superior */
+  border-radius: 10px; /* Bordes redondeados */
+}
+
+/* Encabezados */
+.table-elegant th, .table-elegant-tareas th {
+  background-color: #333; /* Fondo oscuro */
+  color: white; /* Texto blanco */
+  text-align: left; /* Alineación del texto */
+  padding: 10px; /* Espaciado interno */
+}
+
+/* Filas */
+.table-elegant td, .table-elegant-tareas td {
+  border-bottom: 1px solid #e0e0e0; /* Línea divisoria */
+  padding: 10px; /* Espaciado interno */
+  text-align: left; /* Alineación del texto */
+}
+
+/* Hover */
+.table-elegant tbody tr:hover, .table-elegant-tareas tbody tr:hover {
+  background-color: #f8f9fa; /* Fondo claro al pasar el cursor */
+  transition: background-color 0.3s ease; /* Transición suave */
+}
+
+.table-elegant th:first-child, .table-elegant-tareas th:first-child {
+  border-top-left-radius: 10px; /* Esquina superior izquierda */
+}
+
+.table-elegant th:last-child, .table-elegant-tareas th:last-child {
+  border-top-right-radius: 10px; /* Esquina superior derecha */
+}

@@ -5,4 +5,66 @@
     margin: 5px;
     text-align: center;
   }
-  
+
+/* Contenedor para la tabla de tareas */
+.tareas-container {
+  max-height: 300px; /* Define la altura máxima de la tabla */
+  overflow-y: auto; /* Activa el scroll vertical si es necesario */
+  margin-bottom: 15px; /* Espaciado inferior para separar de los botones */
+}
+
+/* Opcional: Estilos para el scroll */
+.tareas-container::-webkit-scrollbar {
+  width: 8px; /* Ancho del scroll */
+}
+
+.tareas-container::-webkit-scrollbar-thumb {
+  background-color: #888; /* Color del scroll */
+  border-radius: 4px; /* Bordes redondeados */
+}
+
+.tareas-container::-webkit-scrollbar-thumb:hover {
+  background-color: #555; /* Color al pasar el cursor */
+}
+
+
+/* Aplica los estilos base de `table-elegant` a ambas clases */
+.table-elegant, .table-elegant-tareas {
+  width: 100%; /* Ancho completo */
+  border-collapse: separate; /* Elimina el espacio entre celdas */
+  border-spacing: 0; /* Sin espaciado extra */
+  border: 1px solid #d1d1d1; /* Borde gris claro */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra suave */
+  background-color: white; /* Fondo blanco */
+  margin-top: 20px; /* Espaciado superior */
+  border-radius: 10px; /* Bordes redondeados */
+}
+
+/* Encabezados */
+.table-elegant th, .table-elegant-tareas th {
+  background-color: #333; /* Fondo oscuro */
+  color: white; /* Texto blanco */
+  text-align: left; /* Alineación del texto */
+  padding: 10px; /* Espaciado interno */
+}
+
+/* Filas */
+.table-elegant td, .table-elegant-tareas td {
+  border-bottom: 1px solid #e0e0e0; /* Línea divisoria */
+  padding: 10px; /* Espaciado interno */
+  text-align: left; /* Alineación del texto */
+}
+
+/* Hover */
+.table-elegant tbody tr:hover, .table-elegant-tareas tbody tr:hover {
+  background-color: #f8f9fa; /* Fondo claro al pasar el cursor */
+  transition: background-color 0.3s ease; /* Transición suave */
+}
+
+.table-elegant th:first-child, .table-elegant-tareas th:first-child {
+  border-top-left-radius: 10px; /* Esquina superior izquierda */
+}
+
+.table-elegant th:last-child, .table-elegant-tareas th:last-child {
+  border-top-right-radius: 10px; /* Esquina superior derecha */
+}

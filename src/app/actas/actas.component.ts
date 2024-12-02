@@ -87,9 +87,9 @@ interface UserActa {
 }
 
 interface Archivo{
-  id: string;
+  id: number;
   grupo_Tarea_Id: number;
-  nombre_Archivo: string;
+  nombreArchivo: string;
   ruta_Archivo: string;
   tipo_Imagen: string;
   contenidoBase64: string;
@@ -133,7 +133,11 @@ export class ActasComponent implements OnInit {
   uploadedFiles: Archivo[] = [];
   archivosSeleccionados: any[] = [];
   grupos:any[] = [];
-  
+  archivosPorGrupoPaginados: Archivo[] = []; // Archivos mostrados en la página actual
+  paginaActualArchivos: number = 1; // Página actual de los archivos
+  tamanoPaginaArchivos: number = 5; // Número de archivos por página
+  showFileModal: boolean = false; // Controlar la visibilidad del modal de archivos
+  archivosPorGrupo: Archivo[] = []; // Lista de archivos para el grupo seleccionado
   archivosEnBase64: { fileName: string, base64: string }[] = [];
 
 
@@ -173,6 +177,7 @@ export class ActasComponent implements OnInit {
     this.loadObras();
     this.loadTareas();
     this.loadGruposTareas();
+    
   }
 
   // Función para obtener un objeto Parametro vacío
@@ -703,15 +708,15 @@ executeConfirmationAction(): void {
   // Modificar las funciones de firmar y rechazar grupo de tareas para mostrar el modal
   firmarGrupoTarea(): void {
     this.openConfirmationModal(
-      '¿Está seguro de que desea firmar este grupo de tareas?',
+      '¿Está seguro de que desea firmar el acta?',
       () => {
         const payload = { estado: 1 };
         const grupoTarea = this.grupoId;
 
         this.http.put(`${this.apiUrlGrupoTarea}/ActualizarEstadoFirma/${grupoTarea}`, payload).subscribe({
           next: response => {
-            console.log(`Estado actualizado correctamente para el grupo ${grupoTarea}:`, response);
-            this.showSuccess('Estado actualizado correctamente.');
+            console.log(`El acta ha sido firmada exitosamente.${grupoTarea}:`, response);
+            this.showSuccess('El grupo de tarea ha sido firmada exitosamente.');
           },
           error: error => {
             console.error(`Error al actualizar el estado del grupo ${grupoTarea}:`, error);
@@ -724,15 +729,15 @@ executeConfirmationAction(): void {
 
   rechazarGrupoTarea(): void {
     this.openConfirmationModal(
-      '¿Está seguro de que desea rechazar este grupo de tareas?',
+      '¿Está seguro de que desea rechazar el grupo de tareas?',
       () => {
         const payload = { estado: 0 };
         const grupoTarea = this.grupoId;
 
         this.http.put(`${this.apiUrlGrupoTarea}/ActualizarEstadoFirma/${grupoTarea}`, payload).subscribe({
           next: response => {
-            console.log(`Estado actualizado correctamente para el grupo ${grupoTarea}:`, response);
-            this.showSuccess('Estado actualizado correctamente.');
+            console.log(`El grupo de tarea ha sido rechazada. ${grupoTarea}:`, response);
+            this.showSuccess('El grupo de tarea ha sido rechazada exitosamente.');
           },
           error: error => {
             console.error(`Error al actualizar el estado del grupo ${grupoTarea}:`, error);
@@ -829,6 +834,132 @@ getRolNombre(id: number): string {
   }
 
   return rol.parametro;
+}
+
+
+// Abrir el modal para mostrar archivos por grupo
+openFileModal(): void {
+  this.http.get<any>(`${this.apiUrlArchivo}/ObtenerArchivosPorGrupo/${this.grupoId}`).subscribe({
+    next: response => {
+      if (response.estado?.ack) {
+        // Mapear los archivos obtenidos
+        this.archivosPorGrupo = response.body.response.map((archivo: any) => ({
+          id: archivo.id,
+          grupo_Tarea_Id: archivo.grupo_Tarea_Id,
+          nombreArchivo: archivo.nombreArchivo || 'Archivo sin nombre',
+          ruta_Archivo: archivo.ruta_Archivo || 'Sin ruta',
+          tipo_Imagen: archivo.tipo_Imagen || 'Desconocido',
+          contenidoBase64: archivo.contenidoBase64 || '',
+        }));
+
+        // Verificar si hay archivos
+        if (this.archivosPorGrupo.length === 0) {
+          this.showError('No hay archivos disponibles.', false); // Mostrar mensaje amigable
+          return;
+        }
+
+        // Resetear y actualizar la lista paginada
+        this.paginaActualArchivos = 1;
+        this.actualizarArchivosPaginados();
+        this.showFileModal = true; // Abrir el modal si hay archivos
+      } else {
+        this.showError(`Error al obtener archivos: ${response.estado.errDes}`, true);
+      }
+    },
+    error: error => {
+      if (error.status === 404) {
+        this.showError('No hay archivos disponibles.', false); // Manejo específico para 404
+      } else {
+        console.error('Error al obtener los archivos:', error);
+        this.showError('Ocurrió un error al obtener los archivos.', true);
+      }
+    }
+  });
+}
+
+
+
+
+// Cerrar el modal de archivos
+closeFileModal(): void {
+  this.showFileModal = false;
+}
+
+// Descargar un archivo
+downloadFile(archivo: Archivo, event?: Event): void {
+  if (event) {
+    event.preventDefault(); 
+    event.stopPropagation(); 
+  }
+
+  if (!archivo.contenidoBase64) {
+    this.showError('No hay contenido para este archivo.', true);
+    return;
+  }
+
+  // Crear un enlace de descarga
+  const link = document.createElement('a');
+  link.href = `data:${archivo.tipo_Imagen || 'application/octet-stream'};base64,${archivo.contenidoBase64}`;
+  link.download = archivo.nombreArchivo || 'archivo_sin_nombre';
+  link.click();
+
+  // Limpieza opcional
+  link.remove();
+}
+
+
+// Eliminar un archivo
+deleteFile(archivoId: number): void {
+  if (!archivoId || isNaN(archivoId) || archivoId <= 0) {
+    this.showError('El ID del archivo no es válido.', true);
+    return;
+  }
+
+  this.openConfirmationModal('¿Está seguro de que desea eliminar este archivo?', () => {
+    const url = `${this.apiUrlArchivo}/Eliminar/${archivoId}`; // Ajusta la ruta
+    this.http.delete<any>(url).subscribe({
+      next: response => {
+        if (response?.estado?.ack) {
+          // Eliminar el archivo de la lista principal
+          this.archivosPorGrupo = this.archivosPorGrupo.filter(archivo => archivo.id !== archivoId);
+
+          // Actualizar la lista paginada
+          this.actualizarArchivosPaginados();
+
+          this.showSuccess('Archivo eliminado exitosamente.');
+        } else {
+          this.showError(`Error al eliminar el archivo: ${response?.estado?.errDes || 'Error desconocido'}`, true);
+        }
+      },
+      error: error => {
+        console.error('Error al eliminar archivo:', error);
+        this.showError('Ocurrió un error al eliminar el archivo.', true);
+      }
+    });
+  });
+}
+
+
+// Actualizar la lista de archivos paginados según la página actual
+actualizarArchivosPaginados(): void {
+  const inicio = (this.paginaActualArchivos - 1) * this.tamanoPaginaArchivos;
+  const fin = inicio + this.tamanoPaginaArchivos;
+  this.archivosPorGrupoPaginados = this.archivosPorGrupo.slice(inicio, fin);
+}
+
+// Cambiar a una página específica
+cambiarPaginaArchivos(pagina: number): void {
+  const totalPaginas = this.obtenerTotalPaginasArchivos();
+  if (pagina < 1 || pagina > totalPaginas) {
+    return;
+  }
+  this.paginaActualArchivos = pagina;
+  this.actualizarArchivosPaginados();
+}
+
+// Calcular el número total de páginas
+obtenerTotalPaginasArchivos(): number {
+  return Math.ceil(this.archivosPorGrupo.length / this.tamanoPaginaArchivos);
 }
 
 
